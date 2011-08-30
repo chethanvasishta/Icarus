@@ -1,14 +1,15 @@
 #include <iostream>
 #include <cstdio>
+
+#include "Parse/Parse.h"
 #define DEBUG 1
 using namespace std;
 //char *keywordslist = {"int", "float", "double", "char"};
-int Parse(char *line){
-#if DEBUG
-	cout<<"Parsing line : "<<line<<endl;
-#endif
-	return 0;	
-}
+
+
+
+
+
 int Compile(char *fileName){
 #if DEBUG
 	std::cout<<"Compiling "<<fileName<<endl; 
@@ -29,6 +30,7 @@ int Compile(char *fileName){
 	fclose(file);  
 	return 0;
 }
+
 int main(int argc, char *argv[]){
 	if(argc < 2){
 		std::cout<<"should input a file to compile"<<endl;
