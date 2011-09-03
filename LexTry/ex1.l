@@ -1,38 +1,20 @@
 %{
-#include "y.tab.h"
+#include "y.tab.hh"
 #include <stdio.h>
-
-int last = START;
+#define DEBUG 1
 %}
 %% 
-"int" { 
-	if(last != START) { 
-		yyerror("%s is a keyword", yytext); 
-	} else {
-		last = TOKEN_INT;
-		return TOKEN_INT;
-	}
-	}
-[0-9]+ {
-	if(last == TOKEN_INT){
-		yyerror("%s is not a valid variable\n", yytext);
-		last = START;
-	}else{
-		ECHO;
-		return NUMBER;
-	}
-	}
+"int" return TOKEN_INT;
 
-[a-zA-Z][a-zA-Z0-9]* {
-	if(last == TOKEN_INT){
-		printf("declaring variable %s\n", yytext);
-		last = START;
-		return VARIABLE;
-	}else{
-		ECHO;
-		return VARIABLE;
-	}
-	}
+[0-9]+ { yylval = atoi(yytext);  return NUMBER; }
+
+[a-zA-Z][a-zA-Z0-9]* { return VARIABLE;	}
+
+[ \t]+ ;
+
+[-+*/] { return *yytext; }
+
+
 
 %%
 
