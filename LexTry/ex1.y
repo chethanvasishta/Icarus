@@ -1,36 +1,50 @@
 %{
 #include <stdio.h>
-extern "C"
-{
-int yylex(void);
-void yyerror(char *);
+extern "C" {
+	int yylex(void);
+	void yyerror(char *);
 }
+extern FILE * yyin;
+#define DEBUG 1
 %}
+%left '+' '-'
+%left  '*' '/'
 
-%token TOKEN_INT NUMBER VARIABLE
+
+%token INTEGER NUMBER VARIABLE FLOAT
 
 %%
-/*statement: expr '+' expr { $$ = $1 + $3; printf("%d", $$); }
-	| expr '-' expr { $$ = $1 - $3; printf("%d", $$); }
-	| expr { $$ = $1; printf("%d", $$); }
-	;*/
-program: program statement '\n'
+program: program statement
 	|
 	;
-statement: NUMBER '+' NUMBER { $$ = $1 + $3 ; printf("%d\n", $$); } 
+statement: expr
 	|
 	;
-//expr: NUMBER;
+expr:	expr '+' expr 	{ $$ = $1 + $3 ; printf("%d\n", $$); }
+	| expr '-' expr { $$ = $1 - $3 ; printf("%d\n", $$); }
+	| expr '*' expr { $$ = $1 * $3 ; printf("%d\n", $$); }
+	| expr '/' expr { $$ = $1 / $3 ; printf("%d\n", $$); }
+	| '(' expr ')' 	{ $$ = $2 ; 	 printf("%d\n", $$); }
+	| NUMBER	{ $$ = $1 ; }
+	| 
+	;
+
 %%
-extern "C"
-{
-
-void yyerror(char *s) {
-    fprintf(stderr, "%s\n", s);
-}
+extern "C" {
+	void yyerror(char *s) {
+	    fprintf(stderr, "%s\n", s);
+	}
 }
 
-int main(){
+int main(int argc, char *argv[]){
+	if(argc >= 2){
+		FILE *fp = fopen(argv[1], "r");
+		if(fp == NULL) return 1;
+		yyin = fp;
+#if DEBUG
+		printf("setting yyin to input file\n");
+#endif
+	}
 	yyparse();
 	return 0;
 }

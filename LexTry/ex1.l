@@ -1,10 +1,15 @@
 %{
+
 #include "y.tab.hh"
 #include <stdio.h>
-#define DEBUG 1
+
 %}
+
 %% 
-"int" return TOKEN_INT;
+
+"int" { return INTEGER; }
+
+"float" { return FLOAT; }
 
 [0-9]+ { yylval = atoi(yytext);  return NUMBER; }
 
@@ -13,8 +18,6 @@
 [ \t]+ ;
 
 [-+*/] { return *yytext; }
-
-
 
 %%
 
