@@ -32,13 +32,23 @@ std::vector<string> symTab;
 
 %%
 program: program statement
-	| 
+	| program func_decl
+	|
 	;
+
+func_decl: datatype VARIABLE '(' arglist ')' ';' { trace("function declaration"); }
+	;
+arglist: datatype VARIABLE
+	| arglist ',' datatype VARIABLE
+	|
+	;
+	
 statement: declaration 
 	| assignment 
-	| ';'
+	| ';' {trace("statement");}
+	;
 declaration: datatype varList ';'	{ trace("declaration");}
-varList: VARIABLE	{ symTab.push_back($1); }
+varList: VARIABLE	{ trace($1);symTab.push_back($1); }
 	| varList',' VARIABLE { symTab.push_back($3); }
 	;
 datatype: INTEGER 	{ trace("int"); }
@@ -56,6 +66,8 @@ expression: NUMBER
 	| expression '/' expression 
 	| '('expression')'
 	;
+
+
 %%
 
 extern "C" {
@@ -92,4 +104,3 @@ int main(int argc, char *argv[]){
 	printAllSymbols();	
 	return 0;
 }
-
