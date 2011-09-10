@@ -37,24 +37,27 @@ program: program statement
 statement: declaration 
 	| assignment 
 	| ';'
-declaration: datatype decl ';'
-	{ 
-		trace("declaration");
-		symTab.push_back($2);
-	}
-decl: VARIABLE
-	| VARIABLE = NUMBER;
-	| 
+declaration: datatype varList ';'	{ trace("declaration");}
+varList: VARIABLE	{ symTab.push_back($1); }
+	| varList',' VARIABLE { symTab.push_back($3); }
 	;
-datatype: INTEGER { trace("int"); }
-	| FLOAT { trace("float"); }
+datatype: INTEGER 	{ trace("int"); }
+	| FLOAT 	{ trace("float"); }
 	;
 assignment: VARIABLE '=' expression ';'	
 	{
 		trace("assignment"); // need to search a better name for assignment. This is a statement
 	}
-expression: NUMBER | VARIABLE | expression '+' expression | expression '-' expression | expression '*' expression | expression '/' expression | '('expression')';
+expression: NUMBER 
+	| VARIABLE 
+	| expression '+' expression 
+	| expression '-' expression 
+	| expression '*' expression 
+	| expression '/' expression 
+	| '('expression')'
+	;
 %%
+
 extern "C" {
 	void yyerror(string s) {
 	    fprintf(stderr, "%s\n", s.c_str());

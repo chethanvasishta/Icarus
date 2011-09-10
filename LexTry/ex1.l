@@ -17,7 +17,7 @@
 
 [ \t]+ ;
 
-[-+*/;=] { return *yytext; }
+[-+*/;=,] { return *yytext; }
 
 %%
 
