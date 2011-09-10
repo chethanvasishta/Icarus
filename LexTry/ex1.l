@@ -11,13 +11,13 @@
 
 "float" { return FLOAT; }
 
-[0-9]+ { yylval = atoi(yytext);  return NUMBER; }
+[0-9]+ { yylval.val = atoi(yytext);  return NUMBER; }
 
-[a-zA-Z][a-zA-Z0-9]* { return VARIABLE;	}
+[a-zA-Z][a-zA-Z0-9]* { yylval.name = yytext; return VARIABLE;	}
 
 [ \t]+ ;
 
-[-+*/] { return *yytext; }
+[-+*/;=] { return *yytext; }
 
 %%
 
