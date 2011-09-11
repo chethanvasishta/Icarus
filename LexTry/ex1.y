@@ -36,7 +36,7 @@ program: program statement
 	|
 	;
 
-func_decl: datatype VARIABLE '(' arglist ')' ';' { trace("function declaration"); }
+func_decl: datatype VARIABLE '(' arglist ')' ';' { trace("function declaration "); }
 	;
 arglist: datatype VARIABLE
 	| arglist ',' datatype VARIABLE
@@ -45,14 +45,14 @@ arglist: datatype VARIABLE
 	
 statement: declaration 
 	| assignment 
-	| ';' {trace("statement");}
+	| ';' {trace("statement ");}
 	;
-declaration: datatype varList ';'	{ trace("declaration");}
-varList: VARIABLE	{ trace($1);symTab.push_back($1); }
+declaration: datatype varList ';'	{ trace("declaration ");}
+varList: VARIABLE	{ symTab.push_back($1); }
 	| varList',' VARIABLE { symTab.push_back($3); }
 	;
-datatype: INTEGER 	{ trace("int"); }
-	| FLOAT 	{ trace("float"); }
+datatype: INTEGER 	{ trace("int "); }
+	| FLOAT 	{ trace("float "); }
 	;
 assignment: VARIABLE '=' expression ';'	
 	{
