@@ -11,7 +11,9 @@
 
 "float" { return FLOAT; }
 
-[-+*/;=,)(] { return *yytext; }
+"void" { return VOID; }
+
+[-+*/;=,)(\{\}] { return *yytext; }
 
 [0-9]+ { yylval.val = atoi(yytext);  return NUMBER; }
 

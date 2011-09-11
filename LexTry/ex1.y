@@ -27,12 +27,13 @@ std::vector<string> symTab;
 
 
 
-%token<val> INTEGER NUMBER FLOAT 
+%token<val> INTEGER NUMBER FLOAT VOID
 %token<name> VARIABLE
 
 %%
 program: program statement
 	| program func_decl
+	| program func_defn
 	|
 	;
 
@@ -42,9 +43,14 @@ arglist: datatype VARIABLE
 	| arglist ',' datatype VARIABLE
 	|
 	;
+
+func_defn: datatype VARIABLE '(' arglist ')' '{' statement_block '}' {trace("function definition "); } ;
+
+statement_block: statement_block statement |  ;
 	
 statement: declaration 
 	| assignment 
+	| expression
 	| ';' {trace("statement ");}
 	;
 declaration: datatype varList ';'	{ trace("declaration ");}
@@ -53,6 +59,7 @@ varList: VARIABLE	{ symTab.push_back($1); }
 	;
 datatype: INTEGER 	{ trace("int "); }
 	| FLOAT 	{ trace("float "); }
+	| VOID		{ trace("void "); }
 	;
 assignment: VARIABLE '=' expression ';'	
 	{
@@ -65,9 +72,14 @@ expression: NUMBER
 	| expression '*' expression 
 	| expression '/' expression 
 	| '('expression')'
+	| func_call
 	;
-
-
+func_call: VARIABLE'('paramlist')'
+paramlist: VARIABLE
+	| NUMBER
+	| paramlist',' VARIABLE
+	| paramlist',' NUMBER
+	;
 %%
 
 extern "C" {
@@ -91,6 +103,14 @@ static void trace(string s){
 #endif
 }
 
+int ParseFile(char *filename){
+	FILE *fp = fopen(filename, "r");
+	if(fp == NULL) return -1;
+	yyin = fp;
+	yyparse();
+	return 0;	
+}
+
 int main(int argc, char *argv[]){
 	if(argc >= 2){
 		FILE *fp = fopen(argv[1], "r");
@@ -101,6 +121,6 @@ int main(int argc, char *argv[]){
 #endif
 	}
 	yyparse();
-	printAllSymbols();	
+	printAllSymbols();
 	return 0;
 }
