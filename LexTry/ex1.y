@@ -22,13 +22,14 @@ std::vector<string> symTab;
     int 	val;
 }
 
+
 %left '+' '-'
 %left  '*' '/'
+%nonassoc '(' ')'
 
 
-
-%token<val> INTEGER NUMBER FLOAT VOID
-%token<name> VARIABLE
+%token<val> INTEGER NUMBER FLOAT VOID RETURN
+%token<name> IDENTIFIER
 
 %%
 program: program statement
@@ -37,48 +38,46 @@ program: program statement
 	|
 	;
 
-func_decl: datatype VARIABLE '(' arglist ')' ';' { trace("function declaration "); }
+func_decl: datatype IDENTIFIER '(' arglist ')' ';' { trace("function declaration "); }
 	;
-arglist: datatype VARIABLE
-	| arglist ',' datatype VARIABLE
+arglist: datatype IDENTIFIER
+	| arglist ',' datatype IDENTIFIER
 	|
 	;
 
-func_defn: datatype VARIABLE '(' arglist ')' '{' statement_block '}' {trace("function definition "); } ;
+func_defn: datatype IDENTIFIER '(' arglist ')' '{' statement_block '}' {trace("function definition "); } ;
 
 statement_block: statement_block statement |  ;
 	
 statement: declaration 
-	| assignment 
-	| expression
+	| assignment
+	| func_call
+	| return_stmt
 	| ';' {trace("statement ");}
 	;
 declaration: datatype varList ';'	{ trace("declaration ");}
-varList: VARIABLE	{ symTab.push_back($1); }
-	| varList',' VARIABLE { symTab.push_back($3); }
+varList: IDENTIFIER	{ symTab.push_back($1); }
+	| varList',' IDENTIFIER { symTab.push_back($3); }
 	;
 datatype: INTEGER 	{ trace("int "); }
 	| FLOAT 	{ trace("float "); }
 	| VOID		{ trace("void "); }
 	;
-assignment: VARIABLE '=' expression ';'	
-	{
-		trace("assignment"); // need to search a better name for assignment. This is a statement
-	}
+assignment: IDENTIFIER '=' expression ';'	{ trace("assignment"); } // need to search a better name for assignment. This is a statement
+return_stmt: RETURN expression;
 expression: NUMBER 
-	| VARIABLE 
+	| IDENTIFIER 
 	| expression '+' expression 
 	| expression '-' expression 
 	| expression '*' expression 
 	| expression '/' expression 
-	| '('expression')'
 	| func_call
+	| '('expression')' 
 	;
-func_call: VARIABLE'('paramlist')'
-paramlist: VARIABLE
-	| NUMBER
-	| paramlist',' VARIABLE
-	| paramlist',' NUMBER
+func_call: IDENTIFIER'('paramlist')'
+paramlist: expression
+	| paramlist',' expression
+	|
 	;
 %%
 

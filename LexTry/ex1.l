@@ -13,6 +13,8 @@
 
 "void" { return VOID; }
 
+"return" { return RETURN; }
+
 [-+*/;=,)(\{\}] { return *yytext; }
 
 [0-9]+ { yylval.val = atoi(yytext);  return NUMBER; }
@@ -21,7 +23,7 @@
 	//yylval.name = yytext; 
 	yylval.name = (char*)calloc(yyleng+1, sizeof(char));
         strncpy(yylval.name, yytext, yyleng); // Remember you need to free this.        
-	return VARIABLE; 
+	return IDENTIFIER; 
 	}
 
 [ \t]+ ;
