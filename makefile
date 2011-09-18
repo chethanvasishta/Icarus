@@ -1,9 +1,10 @@
-all:	Icarus
-Icarus: main.o Parse.o
-	g++ main.o Parse/*o -o Icarus
-main.o: main.cpp Parse/Parse.cpp
-	g++ -c main.cpp
-Parse.o: Parse/Parse.cpp
-	g++ -c Parse/Parse.cpp -o Parse/Parse.o
+all: main parser codegen
+	g++ main.o lex.yy.o parser.o codegen.o -o Icarus
+main: main.cpp
+	g++ -c main.cpp -o main.o
+parser:
+	yacc -d parser.y -o y.tab.cc && lex lexer.l && cc -c lex.yy.c -o lex.yy.o && g++ -c y.tab.cc -o parser.o
+codegen:
+	g++ -c codegen.cpp -o codegen.o
 clean:
-	rm -rf *o hello
+	rm -rf *.o y.tab.cc y.tab.hh
