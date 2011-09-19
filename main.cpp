@@ -24,7 +24,12 @@ static void printFunctions(Module& module){
 #if DEBUG
 	std::list<Function*>& funcList = module.getFunctions();
 	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
-		printf("%s\n", (*funcIter)->getName().c_str());
+		cout<<(*funcIter)->getName()<<"(";
+		FunctionProtoType& fp = (*funcIter)->getProtoType();
+		std::list<int>::const_iterator iter = fp.getTypeList().begin();
+		for(; iter != fp.getTypeList().end(); ++iter)
+			cout<<*iter<<",";
+		cout<<")"<<endl;
 	}
 #endif
 }

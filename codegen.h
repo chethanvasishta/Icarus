@@ -13,10 +13,22 @@ class Statement{
 
 
 class FunctionProtoType{
+public:
+	FunctionProtoType(const std::string& name, std::list<int>& typeList, int returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
 
+	//Getter-Setters
+	std::string getName() const { return m_name; }
+	std::list<int>& getTypeList() { return m_argTypeList; }
+	int getReturnType() { return m_returnType; }
+
+	//overloaded operators
+	bool operator==(const FunctionProtoType& fpOther) const;
+	
 private:
-// we want to have a list of args, with their data types
-
+	std::string m_name;
+	std::list<int> m_argTypeList; //just store the datatypes; no need of names for the proto
+	int m_returnType;
+	FunctionProtoType();
 };
 
 
@@ -29,6 +41,7 @@ public:
 
 	std::string getName() const { return m_name; }
 	std::list<Statement>& getStatements() { return m_statementList; }
+	FunctionProtoType& getProtoType() const { return m_protoType; }
 	
 private:
 	std::list<Statement> m_statementList;
@@ -71,9 +84,11 @@ public:
 	std::string getName() const { return m_name; }
 	std::list<Function*>& getFunctions() { return m_functionList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
+	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
 
 	IcErr addFunction(Function& f);
 	IcErr addSymbol(Symbol& s);
+	IcErr addProtoType(FunctionProtoType& fp);
 	
 private:
 	std::string m_name;

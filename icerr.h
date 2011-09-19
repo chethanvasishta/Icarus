@@ -4,8 +4,11 @@
 // a file to handle errors
 
 enum IcErr{
-	No_Err = 0,
-	Function_Exists
+	eNoErr = 0,
+	eFunctionAlreadyDefined,
+	eProtoTypeAlreadyDefined
 };
+
+extern std::string errMsg[];
 
 #endif //ICERR_H
