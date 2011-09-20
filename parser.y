@@ -4,14 +4,15 @@
 #include <vector>
 #include <string>
 #include "codegen.h"
+#include <FlexLexer.h>
+#include <fstream>
 using namespace std;
 
-extern "C" {
-	int yylex(void);
-	void yyerror(string);
-}
+int yylex(void);
+extern void yyerror(string);
 
-extern FILE * yyin;
+
+extern "C" FILE *yyin;
 static void addSymbol(char *s);
 
 //debug definitions
@@ -26,13 +27,15 @@ static int debugLevel = 3;
 
 //globals
 static Module& module = *new Module("globalModule");
-static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList 
+static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList. See if we can add it to a class, say Parser. I don't like globals
+yyFlexLexer lexer; //this is our lexer
 %}
 
 %union
 {
     char*	name;
     int 	val;
+    Value*	value;
 }
 
 
@@ -40,9 +43,10 @@ static std::list<int> dataTypeList; //to store the data types of the arguments w
 %left  '*' '/'
 %nonassoc '(' ')'
 
-
 %token<val> INTEGER NUMBER FLOAT VOID RETURN
 %token<name> IDENTIFIER
+
+%type<value> expression
 
 %start program
 
@@ -105,14 +109,14 @@ datatype: INTEGER 	{ trace1("int "); }
 	;
 assignment: IDENTIFIER '=' expression ';'	{ trace1("assignment"); } // need to search a better name for assignment. This is a statement
 return_stmt: RETURN expression;
-expression: NUMBER 
-	| IDENTIFIER 
-	| expression '+' expression 
-	| expression '-' expression 
-	| expression '*' expression 
-	| expression '/' expression 
-	| func_call
-	| '('expression')' 
+expression: NUMBER { $$ = (Value*)new Constant(); }
+	| IDENTIFIER { $$ = new Variable(); }
+	| expression '+' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Add); }
+	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
+	| expression '*' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Mul); }
+	| expression '/' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Div); }
+	| func_call { $$ = new FunctionCall(); }
+	| '('expression')' { $$ = $2; }
 	;
 func_call: IDENTIFIER'('paramlist')' { trace2("function called"); }
 paramlist: expression
@@ -121,14 +125,12 @@ paramlist: expression
 	;
 %%
 
-extern "C" {
-	void yyerror(string s) {
-	    fprintf(stderr, "%s\n", s.c_str());
-	}
+void yyerror(string s) {
+    fprintf(stderr, "%s\n", s.c_str());
+}
 
-	int yywrap (void ) {
-		return 1;
-	}
+int yywrap (void ) {
+	return 1;
 }
 
 //Helper functions
@@ -147,10 +149,14 @@ static void trace(string s, int level){
 #endif
 }
 
+int yylex(void){
+	return lexer.yylex();
+}
+
 Module* ParseFile(char *filename){
-	FILE *fp = fopen(filename, "r");
-	if(fp == NULL) return NULL;
-	yyin = fp;
+	ifstream fp;
+	fp.open(filename, ios::in);
+	lexer.yyrestart(&fp);
 	yyparse();
 	return &module;	
 }

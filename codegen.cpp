@@ -16,7 +16,11 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 	}
 	return true;
 }
-
+//--------------Function------------------
+IcErr Function::addStatement(Statement& s){
+	m_statementList.push_back(s);
+	return eNoErr;
+}
 
 //--------------SymbolTable---------------
 
