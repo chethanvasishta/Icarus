@@ -147,10 +147,11 @@ IcErr ASTBuilder::addFunction(Function& f){
 		for(; iter != m_tempStatementList.end(); ++iter){
 			err = f.addStatement(*(*iter));
 			if(err)
-				return err;
+				break;
 		}
 	}
-	return eNoErr;
+	m_tempStatementList.clear();
+	return err;
 }
 
 IcErr ASTBuilder::insertStatement(Statement& s){

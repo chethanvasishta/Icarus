@@ -19,7 +19,7 @@ static void addSymbol(char *s);
 static void trace(string,int);
 #define DEBUG 1
 #if DEBUG
-static int debugLevel = 1;
+static int debugLevel = 3;
 #endif 
 
 #define trace1(s) trace(s, 1)
@@ -47,6 +47,7 @@ yyFlexLexer lexer; //this is our lexer
 %token<val> INTEGER NUMBER FLOAT VOID RETURN
 %token<name> IDENTIFIER
 
+%type<val> datatype
 %type<value> expression
 %type<statement> return_stmt
 
@@ -72,8 +73,16 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	}
 	;
 	
-arglist: datatype IDENTIFIER { dataTypeList.push_back($<val>1); }
-	| arglist ',' datatype IDENTIFIER { dataTypeList.push_back($<val>3); }
+arglist: datatype IDENTIFIER 
+	{
+		dataTypeList.push_back($1); 
+		addSymbol($2);
+	}
+	| arglist ',' datatype IDENTIFIER 
+	{
+		dataTypeList.push_back($3);
+		addSymbol($4);
+	}
 	|
 	;
 //as and when we find the identifiers , we need to add them to a list and use them while constructing the prototype/func
@@ -128,7 +137,12 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 	; 
 
 expression: NUMBER { $$ = new Constant(); }
-	| IDENTIFIER { $$ = new Variable(*builder.getSymbol($1)); }
+	| IDENTIFIER {
+		Symbol *identifierSymbol = builder.getSymbol($1);
+		if(identifierSymbol == NULL)			
+			yyerror("Symbol Not Defined");			
+		$$ = new Variable(*identifierSymbol); 
+	}
 	| expression '+' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Add); }
 	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
 	| expression '*' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Mul); }

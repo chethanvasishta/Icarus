@@ -18,7 +18,7 @@ class Module;
 
 class IClassVisitor{
 public:
-	virtual void Visit(Value* ) = 0;
+	virtual void Visit(Value& ) = 0;
 	virtual void Visit(Expression&) = 0;
 	virtual void Visit(Variable&) = 0;
 	virtual void Visit(BinopExpression&) = 0;

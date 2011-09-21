@@ -34,6 +34,10 @@ private:
 class Variable: public Expression {
 public:
 	Variable(Symbol& s):m_symbol(s){}
+
+	//Getter-Setters
+	Symbol& getSymbol() { return m_symbol; }
+	
 	virtual void accept(IClassVisitor &);
 private:
 	Symbol& m_symbol;//check this
@@ -48,6 +52,13 @@ public:
 		Div		
 	};	
 	BinopExpression(Value& left,Value& right, BinaryOperation op): m_left(left), m_right(right), m_op(op){}
+
+	//Getter-Setters	
+	Value& getLeftValue() { return m_left; }
+	Value& getRightValue() { return m_right; }
+	BinaryOperation getOperation() { return m_op; }
+
+	//Visitors
 	virtual void accept(IClassVisitor &);
 private:
 	Value& m_left;
@@ -91,7 +102,7 @@ public:
 	ReturnStatement(Value *value): m_value(value){}
 
 	//Getter-Setters
-	Value* getReturnVal() { return m_value; }
+	Value* getReturnValue() { return m_value; }
 	
 	//Visitors	
 	virtual void accept(IClassVisitor &);

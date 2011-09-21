@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include "codegen.h"
+#include "PrintVisitor.h"
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -60,6 +61,7 @@ int main(int argc, char *argv[]){
 	}
 	for(int i = 1 ; i < argc ; ++i)
 		Compile(argv[i]);
-	printModule(*module);
+	PrintVisitor *p = new PrintVisitor();
+	p->Visit(*module);
 	return 0;
 }
