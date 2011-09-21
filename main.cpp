@@ -45,7 +45,7 @@ static void printSymbols(Module& module){
 
 static void printModule(Module& module){
 #if DEBUG
-	cout<<"---------------------Print Module: "<<module.getName()<<"-------------------"<<endl;
+	cout<<module;
 	cout<<"---------------------Functions-------------------"<<endl;
 	printFunctions(module);
 	cout<<"---------------------Symbols---------------------"<<endl;
@@ -58,7 +58,8 @@ int main(int argc, char *argv[]){
 		std::cout<<"should input a file to compile"<<endl;
 		return 0;
 	}
-	Compile(argv[1]);
+	for(int i = 1 ; i < argc ; ++i)
+		Compile(argv[i]);
 	printModule(*module);
 	return 0;
 }

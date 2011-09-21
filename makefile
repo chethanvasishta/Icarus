@@ -1,5 +1,5 @@
-all: main lexer parser codegen errorhandler
-	g++ main.o parser.o lex.yy.o codegen.o errorhandler.o -lfl -o Icarus
+all: main lexer parser codegen errorhandler dotwriter
+	g++ main.o parser.o lex.yy.o codegen.o errorhandler.o dotwriter.o -lfl -o Icarus
 main: main.cpp
 	g++ -c main.cpp -o main.o
 parser:
@@ -10,6 +10,8 @@ codegen:
 	g++ -c codegen.cpp -o codegen.o
 errorhandler:
 	g++ -c icerr.cpp -o errorhandler.o
+dotwriter:
+	g++ -c ./Dot/dotwriter.cpp -o dotwriter.o
 #debug
 debug: maind lexerd parserd codegend errorhandlerd
 	g++ -g main.o parser.o lex.yy.o codegen.o errorhandler.o -lfl -o IcarusD
@@ -24,4 +26,4 @@ codegend:
 errorhandlerd:
 	g++ -g -c icerr.cpp -o errorhandler.o
 clean:
-	rm -rf *.o y.tab.cc y.tab.hh lex.yy.cc
+	rm -rf *.o y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD

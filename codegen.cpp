@@ -1,4 +1,5 @@
 #include "codegen.h"
+#include <iostream>
 
 //definitions
 //--------------FunctionProtoType---------------
@@ -18,8 +19,14 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 }
 //--------------Function------------------
 IcErr Function::addStatement(Statement& s){
-	m_statementList.push_back(s);
+	m_statementList.push_back(&s);
 	return eNoErr;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Function& f){
+	stream<<"Function: "<<f.m_name<<endl;
+	//print the statements here
+	
 }
 
 //--------------SymbolTable---------------
@@ -62,6 +69,61 @@ FunctionProtoType* Module::getProtoType(const std::string name, std::list<int> d
 	return NULL; //not found
 }
 
+IcErr Module::insertStatement(Function& f, Statement& s){
+	return f.addStatement(s);
+}
+
+std::ostream& operator<<(std::ostream& stream, const Module& m){
+	stream<<"Module: "<<m.m_name<<endl;
+	return stream;
+}
+
 Module::~Module(){
 	delete &m_symbolTable;
 }
+
+//----------------------ASTBuilder----------------
+ASTBuilder::ASTBuilder():m_module(*new Module("globalModule")),m_curFunction(NULL){
+}
+
+IcErr ASTBuilder::addSymbol(Symbol& s){
+	return m_module.addSymbol(s);
+}
+
+IcErr ASTBuilder::addFunction(Function& f){
+	IcErr err = m_module.addFunction(f);	
+	if(!err){
+		m_curFunction = &f;
+		std::list<Statement*>::const_iterator iter = m_tempStatementList.begin();
+		for(; iter != m_tempStatementList.end(); ++iter){
+			err = f.addStatement(*(*iter));
+			if(err)
+				return err;
+		}
+	}
+	return eNoErr;
+}
+
+IcErr ASTBuilder::insertStatement(Statement& s){
+	m_tempStatementList.push_back(&s);
+	return eNoErr;// m_module.insertStatement(*m_curFunction, s);
+}
+
+IcErr ASTBuilder::addProtoType(FunctionProtoType& fp){
+	return m_module.addProtoType(fp);
+}
+
+FunctionProtoType* ASTBuilder::getProtoType(const std::string name, std::list<int> dataTypes){
+	return m_module.getProtoType(name, dataTypes);
+}
+
+Symbol* ASTBuilder::getSymbol(std::string name){
+	std::list<Symbol*>& symbolList = m_module.getSymbols();
+	std::list<Symbol*>::const_iterator iter = symbolList.begin();
+	for(; iter!= symbolList.end() ; ++iter ){
+		if((*iter)->getName() == name)
+			return *iter;		
+	}
+	return NULL;
+}
+

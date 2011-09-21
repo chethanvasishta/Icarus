@@ -5,9 +5,9 @@ int add(int x, int y)
 }
 
 int main(){
-	int x, y;
-	int z;
-	z = add(x, y);
-	printf(z);
-	return z;
+	int a, b;
+	int c;
+	c = add(b, a);
+	c = printf(c);
+	return c;
 }

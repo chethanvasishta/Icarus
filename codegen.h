@@ -8,7 +8,7 @@
 using namespace std;
 //definitions
 /*
-Everything shoule be a Value
+Everything should be a Value
 a constant, an identifier, an expression, a function call etc , just like LLVM
 */
 class Value{
@@ -22,17 +22,19 @@ class Expression: public Value {
 /*
 Constant should have a datatype and a value
 */
-class Constant: public Value {
+class Constant: public Expression {
 public:
 
 private:
 };
 
-class Variable: public Value {
+class Symbol; //forward reference
+class Variable: public Expression {
+public:
+	Variable(Symbol& s):m_symbol(s){}
+private:
+	Symbol& m_symbol;//check this
 };
-
-//this should be inside the binary operation expression class
-
 
 class BinopExpression : public Expression {
 public:
@@ -58,18 +60,31 @@ private:
 
 };
 
-class Statement{
+class Statement : public Value{
 		
 };
 
 class Assignment : public Statement{
-
+public:
+	Assignment(Variable& lVal, Value& rVal):m_lval(lVal), m_rval(rVal){}
+	
 	//Getter-Setters
 	Variable& getLVal() const { return m_lval; }
 	Value& getRVal() const { return m_rval; }
 private:
 	Variable& m_lval;
 	Value& m_rval;
+	Assignment();
+};
+
+class ReturnStatement : public Statement {
+public:
+	ReturnStatement(Value *value): m_value(value){}
+
+	//Getter-Setters
+	Value* getReturnVal() { return m_value; }
+private:
+	Value *m_value; //return statement can have NULL expression
 };
 
 /*
@@ -110,13 +125,16 @@ public:
 	//Getter-Setters
 
 	std::string getName() const { return m_name; }
-	std::list<Statement>& getStatements() { return m_statementList; }
+	std::list<Statement*>& getStatements() { return m_statementList; }
 	FunctionProtoType& getProtoType() const { return m_protoType; }
 
 	IcErr addStatement(Statement& s);
+
+	//overloaded operators
+	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
 	
 private:
-	std::list<Statement> m_statementList;
+	std::list<Statement*> m_statementList;
 	std::string m_name;
 	FunctionProtoType& m_protoType;
 
@@ -161,6 +179,10 @@ public:
 	IcErr addFunction(Function& f);
 	IcErr addSymbol(Symbol& s);
 	IcErr addProtoType(FunctionProtoType& fp);
+	IcErr insertStatement(Function& f, Statement& s);
+
+	//overloaded operators
+	friend std::ostream& operator<<(std::ostream& stream, const Module& m);
 	
 private:
 	std::string m_name;
@@ -168,6 +190,25 @@ private:
 	std::list<FunctionProtoType*> m_funcProtoList;
 	SymbolTable& m_symbolTable;
 	Module();
+};
+
+class ASTBuilder{ //This will be a builder class only and won't be necessary for further optimizations in the code
+public:
+	ASTBuilder();
+
+	IcErr addSymbol(Symbol& s);
+	IcErr addFunction(Function& f);
+	IcErr insertStatement(Statement& s);
+	IcErr addProtoType(FunctionProtoType& fp);
+
+	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
+	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
+
+	Module& getModule() { return m_module; }
+private:
+	Function* m_curFunction;//can be null. this might not be valid now. See m_tempStatementList's explanation
+	Module& m_module;
+	std::list<Statement*> m_tempStatementList; //the parser would reduce the statement block and then add the function to the list. We need to a temp list to store the statements and store them to the function.
 };
 
 
