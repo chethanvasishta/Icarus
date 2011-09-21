@@ -2,6 +2,32 @@
 #include <iostream>
 
 //definitions
+//--------------Variable----------------------
+
+void Variable::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+//--------------BinopExpression----------------
+
+void BinopExpression::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+//------------Assignment--------------------
+
+void Assignment::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+//------------ReturnStatement------------------
+
+void ReturnStatement::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+
+
 //--------------FunctionProtoType---------------
 bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 	if(m_name != fpOther.m_name)
@@ -17,6 +43,10 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 	}
 	return true;
 }
+
+void FunctionProtoType::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
 //--------------Function------------------
 IcErr Function::addStatement(Statement& s){
 	m_statementList.push_back(&s);
@@ -29,12 +59,26 @@ std::ostream& operator<<(std::ostream& stream, const Function& f){
 	
 }
 
+void Function::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+//------------Symbol---------------
+
+void Symbol::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
 //--------------SymbolTable---------------
 
 IcErr SymbolTable::add(Symbol& sym){
 	//do error handling later
 	m_symbols.push_back(&sym);
 	return eNoErr;
+}
+
+void SymbolTable::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
 }
 
 //---------------Module----------------
@@ -81,6 +125,11 @@ std::ostream& operator<<(std::ostream& stream, const Module& m){
 Module::~Module(){
 	delete &m_symbolTable;
 }
+
+void Module::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
 
 //----------------------ASTBuilder----------------
 ASTBuilder::ASTBuilder():m_module(*new Module("globalModule")),m_curFunction(NULL){

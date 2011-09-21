@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 #include "icerr.h"
+#include "IClassVisitor.h"
 using namespace std;
 //definitions
 /*
@@ -12,11 +13,13 @@ Everything should be a Value
 a constant, an identifier, an expression, a function call etc , just like LLVM
 */
 class Value{
-	
+public:
+	virtual void accept(IClassVisitor &){}
 };
 
 class Expression: public Value {
-	
+public:
+	virtual void accept(IClassVisitor &){}
 };
 
 /*
@@ -24,14 +27,14 @@ Constant should have a datatype and a value
 */
 class Constant: public Expression {
 public:
-
+	virtual void accept(IClassVisitor &){}
 private:
 };
 
-class Symbol; //forward reference
 class Variable: public Expression {
 public:
 	Variable(Symbol& s):m_symbol(s){}
+	virtual void accept(IClassVisitor &);
 private:
 	Symbol& m_symbol;//check this
 };
@@ -45,7 +48,7 @@ public:
 		Div		
 	};	
 	BinopExpression(Value& left,Value& right, BinaryOperation op): m_left(left), m_right(right), m_op(op){}
-	
+	virtual void accept(IClassVisitor &);
 private:
 	Value& m_left;
 	Value& m_right;
@@ -55,22 +58,28 @@ private:
 
 class FunctionCall : public Expression {
 public:
-
+	//Visitors
+	virtual void accept(IClassVisitor &){}
 private:
 
 };
 
 class Statement : public Value{
+public:
+	//Visitors
+	virtual void accept(IClassVisitor &){}
 		
 };
 
 class Assignment : public Statement{
 public:
 	Assignment(Variable& lVal, Value& rVal):m_lval(lVal), m_rval(rVal){}
-	
 	//Getter-Setters
 	Variable& getLVal() const { return m_lval; }
 	Value& getRVal() const { return m_rval; }
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
 private:
 	Variable& m_lval;
 	Value& m_rval;
@@ -83,6 +92,9 @@ public:
 
 	//Getter-Setters
 	Value* getReturnVal() { return m_value; }
+	
+	//Visitors	
+	virtual void accept(IClassVisitor &);
 private:
 	Value *m_value; //return statement can have NULL expression
 };
@@ -108,6 +120,9 @@ public:
 
 	//overloaded operators
 	bool operator==(const FunctionProtoType& fpOther) const;
+
+	//Visitors
+	virtual void accept(IClassVisitor &);	
 	
 private:
 	std::string m_name;
@@ -132,6 +147,10 @@ public:
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
+
 	
 private:
 	std::list<Statement*> m_statementList;
@@ -150,6 +169,9 @@ public:
 
 	//Getter-Setters
 	std::string getName() const { return m_name; }
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
 private:
 	Symbol();
 	std::string m_name; //we need to add more details regarding the 
@@ -160,6 +182,10 @@ public:
 	//Getter-Setters
 	IcErr add(Symbol& sym);	
 	std::list<Symbol*>& getSymbols() { return m_symbols; }	
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
+
 private:
 	std::list<Symbol*> m_symbols;
 };
@@ -183,6 +209,9 @@ public:
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Module& m);
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
 	
 private:
 	std::string m_name;
