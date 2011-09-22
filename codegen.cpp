@@ -26,6 +26,17 @@ void ReturnStatement::accept(IClassVisitor &visitor){
 	visitor.Visit(*this);
 }
 
+//---------ExpressionStatement-----------------
+
+void ExpressionStatement::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
+//-----------FunctionCall----------------------------
+void FunctionCall::accept(IClassVisitor &visitor){
+	visitor.Visit(*this);
+}
+
 
 
 //--------------FunctionProtoType---------------
@@ -130,6 +141,15 @@ void Module::accept(IClassVisitor &visitor){
 	visitor.Visit(*this);
 }
 
+Function* Module::getFunction(const std::string name){
+	std::list<Function*>::const_iterator iter = m_functionList.begin();
+	for(; iter != m_functionList.end(); ++iter){
+		if((*iter)->getName() == name)
+			return *iter;
+	}
+	return NULL;
+}
+
 
 //----------------------ASTBuilder----------------
 ASTBuilder::ASTBuilder():m_module(*new Module("globalModule")),m_curFunction(NULL){
@@ -177,3 +197,6 @@ Symbol* ASTBuilder::getSymbol(std::string name){
 	return NULL;
 }
 
+Function* ASTBuilder::getFunction(const std::string name){
+	return m_module.getFunction(name);
+}

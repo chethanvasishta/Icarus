@@ -17,11 +17,11 @@
 
 [-+*/;=,)(\{\}] { return *yytext; }
 
-[0-9]+ { yylval.val = atoi(yytext);  return NUMBER; }
+[0-9]+ { yylval.integer = atoi(yytext);  return NUMBER; }
 
 [a-zA-Z][a-zA-Z0-9]* { 
-	yylval.name = (char*)calloc(yyleng+1, sizeof(char));
-        strncpy(yylval.name, yytext, yyleng); // Remember you need to free this.        
+	yylval.string = (char*)calloc(yyleng+1, sizeof(char));
+        strncpy(yylval.string, yytext, yyleng); // Remember you need to free this.
 	return IDENTIFIER; 
 	}
 

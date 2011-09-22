@@ -6,6 +6,7 @@ void main(){
 	z = x + y;
 	int r;
 	r = multiply(x,y);
+	r = x + y * z;
 	return z;
 }
 

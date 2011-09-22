@@ -22,8 +22,11 @@ void PrintVisitor::Visit(BinopExpression& b){
 	b.getRightValue().accept(*this);
 }
 
-void PrintVisitor::Visit(FunctionCall&){
-
+void PrintVisitor::Visit(FunctionCall& f){
+	cout<<"Function Call: "<<f.getFunction().getName()<<endl;
+	std::list<Value*>::const_iterator iter = f.getParamList().begin();
+	for(; iter != f.getParamList().end(); ++iter)
+		(*iter)->accept(*this);
 }
 
 void PrintVisitor::Visit(Statement&){
@@ -39,7 +42,7 @@ void PrintVisitor::Visit(Assignment& a){
 void PrintVisitor::Visit(ReturnStatement& r){
 	cout<<"Return: "<<endl;
 	if(r.getReturnValue() != NULL)
-		Visit(*r.getReturnValue());
+		r.getReturnValue()->accept(*this);
 }
 
 void PrintVisitor::Visit(FunctionProtoType&){

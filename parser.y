@@ -27,14 +27,15 @@ static int debugLevel = 3;
 
 //globals
 static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList. See if we can add it to a class, say Parser. I don't like globals
+static std::list<Value*> parameterList;
 static ASTBuilder& builder = *new ASTBuilder();
 yyFlexLexer lexer; //this is our lexer
 %}
 
 %union
 {
-    char*	name;
-    int 	val;
+    char*	string;
+    int 	integer;
     Value*	value;
     Statement* 	statement;
 }
@@ -44,12 +45,12 @@ yyFlexLexer lexer; //this is our lexer
 %left  '*' '/'
 %nonassoc '(' ')'
 
-%token<val> INTEGER NUMBER FLOAT VOID RETURN
-%token<name> IDENTIFIER
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN
+%token<string> IDENTIFIER
 
-%type<val> datatype
-%type<value> expression
-%type<statement> return_stmt
+%type<integer> datatype
+%type<value> expression func_call
+%type<statement> return_stmt assignment
 
 %start program
 
@@ -63,8 +64,8 @@ program: program statement
 func_decl: datatype IDENTIFIER '(' arglist ')' ';' 
 	{ 
 		trace2("function declaration ");
-		const std::string& name = $2;
-		FunctionProtoType& fp = *new FunctionProtoType(name, dataTypeList, $<val>1);
+		const std::string& string = $2;
+		FunctionProtoType& fp = *new FunctionProtoType(string, dataTypeList, $1);
 		dataTypeList.clear();
 		IcErr err = builder.addProtoType(fp);
 		if(err != eNoErr)
@@ -90,25 +91,25 @@ arglist: datatype IDENTIFIER
 func_defn: datatype IDENTIFIER '(' arglist ')' '{' statement_block '}' 
 	{
 		trace2("function definition ");
-		const std::string& name = $2;
-		FunctionProtoType* fp = builder.getProtoType(name, dataTypeList);
+		const std::string& string = $2;
+		FunctionProtoType* fp = builder.getProtoType(string, dataTypeList);
 		if(fp == NULL){
-			fp = new FunctionProtoType(name, dataTypeList, $<val>1); //find the prototype in the module. if not found, add a new one
+			fp = new FunctionProtoType(string, dataTypeList, $<integer>1); //find the prototype in the module. if not found, add a new one
 			builder.addProtoType(*fp);
 		}
 		dataTypeList.clear();
-		Function& f = *new Function(name, *fp);
+		Function& f = *new Function(string, *fp);
 		IcErr err = builder.addFunction(f);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);
-	} ;
+	};
 
 statement_block: statement_block statement |  ;
 	
 statement: declaration 
-	| assignment 
-	| func_call ';'
-	| return_stmt ';'
+	| assignment { builder.insertStatement(*$1);}
+	| expression';' { builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));}
+	| return_stmt ';'{ builder.insertStatement(*$1);}
 	| ';' {trace2("statement ");}
 	;
 	
@@ -129,7 +130,7 @@ assignment: IDENTIFIER '=' expression ';'
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)
 			yyerror("Symbol Not Defined");
-		builder.insertStatement(*new Assignment(*new Variable(*identifierSymbol), *$3));	
+		$$ = new Assignment(*new Variable(*identifierSymbol), *$3);
 	}
 
 return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
@@ -147,17 +148,22 @@ expression: NUMBER { $$ = new Constant(); }
 	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
 	| expression '*' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Mul); }
 	| expression '/' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Div); }
-	| func_call { $$ = new FunctionCall();  }
+	| func_call { $$ = $1; }
 	| '('expression')' { $$ = $2; }
 	;
 	
 func_call: IDENTIFIER'('paramlist')'
 	{
-		trace2("function called"); 		
+		trace2("function called");
+		Function* func = builder.getFunction($1);
+		if(func == NULL)
+			yyerror("Function not found");
+		$$ = new FunctionCall(*func, parameterList);
+		parameterList.clear();
 	}
 
-paramlist: expression
-	| paramlist',' expression
+paramlist: expression { parameterList.push_back($1); }
+	| paramlist',' expression { parameterList.push_back($3); }
 	|
 	;
 %%

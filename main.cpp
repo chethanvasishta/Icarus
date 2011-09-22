@@ -59,9 +59,10 @@ int main(int argc, char *argv[]){
 		std::cout<<"should input a file to compile"<<endl;
 		return 0;
 	}
-	for(int i = 1 ; i < argc ; ++i)
-		Compile(argv[i]);
 	PrintVisitor *p = new PrintVisitor();
-	p->Visit(*module);
+	for(int i = 1 ; i < argc ; ++i){
+		Compile(argv[i]);
+		p->Visit(*module);
+	}
 	return 0;
 }

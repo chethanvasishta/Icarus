@@ -19,7 +19,7 @@ public:
 
 class Expression: public Value {
 public:
-	virtual void accept(IClassVisitor &){}
+	virtual void accept(IClassVisitor &)=0;
 };
 
 /*
@@ -69,17 +69,25 @@ private:
 
 class FunctionCall : public Expression {
 public:
-	//Visitors
-	virtual void accept(IClassVisitor &){}
-private:
+	FunctionCall(Function& function, std::list<Value*>& params): m_function(function), m_paramList(params){}
 
+	//Getter-Setters
+	Function& getFunction() { return m_function; }
+	std::list<Value*>& getParamList() { return m_paramList; }
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
+private:
+	Function& m_function;
+	std::list<Value*> m_paramList;
 };
 
 class Statement : public Value{
 public:
 	//Visitors
-	virtual void accept(IClassVisitor &){}
-		
+	virtual void accept(IClassVisitor &){}	
+	///!!! make this class abstract
+private:	
 };
 
 class Assignment : public Statement{
@@ -108,6 +116,21 @@ public:
 	virtual void accept(IClassVisitor &);
 private:
 	Value *m_value; //return statement can have NULL expression
+	ReturnStatement();
+};
+
+class ExpressionStatement : public Statement {
+public:
+	ExpressionStatement(Expression& expression): m_expression(expression){}
+
+	Expression& getExpression() { return m_expression; }
+
+	//Visitors	
+	virtual void accept(IClassVisitor &);
+private:
+	Expression& m_expression;
+	ExpressionStatement();
+
 };
 
 /*
@@ -212,6 +235,7 @@ public:
 	std::list<Function*>& getFunctions() { return m_functionList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
 	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
+	Function* getFunction(const std::string name); //need to add support for datatypes too
 
 	IcErr addFunction(Function& f);
 	IcErr addSymbol(Symbol& s);
@@ -243,6 +267,7 @@ public:
 
 	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
 	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
+	Function* getFunction(const std::string name);
 
 	Module& getModule() { return m_module; }
 private:
