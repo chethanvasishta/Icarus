@@ -11,6 +11,7 @@ public:
 	virtual void Visit(BinopExpression&);
 	virtual void Visit(FunctionCall&);
 	virtual void Visit(Statement&);
+	virtual void Visit(ExpressionStatement&);	
 	virtual void Visit(Assignment&);
 	virtual void Visit(ReturnStatement&);
 	virtual void Visit(FunctionProtoType&);

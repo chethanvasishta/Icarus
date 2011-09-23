@@ -15,6 +15,7 @@ class Function;
 class SymbolTable;
 class Symbol;
 class Module;
+class ExpressionStatement;
 
 class IClassVisitor{
 public:
@@ -25,6 +26,7 @@ public:
 	virtual void Visit(FunctionCall&) = 0;
 	virtual void Visit(Statement&) = 0;
 	virtual void Visit(Assignment&) = 0;
+	virtual void Visit(ExpressionStatement&) = 0;
 	virtual void Visit(ReturnStatement&) = 0;
 	virtual void Visit(FunctionProtoType&) = 0;
 	virtual void Visit(Function&) = 0;

@@ -6,6 +6,7 @@
 #include <string>
 #include "icerr.h"
 #include "IClassVisitor.h"
+#include "CompEA.h"
 using namespace std;
 //definitions
 /*
@@ -15,11 +16,13 @@ a constant, an identifier, an expression, a function call etc , just like LLVM
 class Value{
 public:
 	virtual void accept(IClassVisitor &){}
+	virtual CompEA* codegen() = 0;
 };
 
 class Expression: public Value {
 public:
 	virtual void accept(IClassVisitor &)=0;
+	virtual CompEA* codegen() = 0;
 };
 
 /*
@@ -28,6 +31,7 @@ Constant should have a datatype and a value
 class Constant: public Expression {
 public:
 	virtual void accept(IClassVisitor &){}
+	virtual CompEA* codegen();
 private:
 };
 
@@ -39,6 +43,7 @@ public:
 	Symbol& getSymbol() { return m_symbol; }
 	
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Symbol& m_symbol;//check this
 };
@@ -60,6 +65,7 @@ public:
 
 	//Visitors
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Value& m_left;
 	Value& m_right;
@@ -77,6 +83,7 @@ public:
 
 	//Visitors
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Function& m_function;
 	std::list<Value*> m_paramList;
@@ -85,7 +92,7 @@ private:
 class Statement : public Value{
 public:
 	//Visitors
-	virtual void accept(IClassVisitor &){}	
+	virtual void accept(IClassVisitor &)=0;
 	///!!! make this class abstract
 private:	
 };
@@ -99,6 +106,7 @@ public:
 
 	//Visitors
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Variable& m_lval;
 	Value& m_rval;
@@ -114,6 +122,7 @@ public:
 	
 	//Visitors	
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Value *m_value; //return statement can have NULL expression
 	ReturnStatement();
@@ -127,6 +136,7 @@ public:
 
 	//Visitors	
 	virtual void accept(IClassVisitor &);
+	virtual CompEA* codegen();
 private:
 	Expression& m_expression;
 	ExpressionStatement();
@@ -156,7 +166,7 @@ public:
 	bool operator==(const FunctionProtoType& fpOther) const;
 
 	//Visitors
-	virtual void accept(IClassVisitor &);	
+	virtual void accept(IClassVisitor &);
 	
 private:
 	std::string m_name;
@@ -178,6 +188,8 @@ public:
 	FunctionProtoType& getProtoType() const { return m_protoType; }
 
 	IcErr addStatement(Statement& s);
+
+	virtual CompEA* codegen();
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
@@ -242,6 +254,8 @@ public:
 	IcErr addProtoType(FunctionProtoType& fp);
 	IcErr insertStatement(Function& f, Statement& s);
 
+	virtual CompEA* codegen();
+
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Module& m);
 
@@ -275,6 +289,5 @@ private:
 	Module& m_module;
 	std::list<Statement*> m_tempStatementList; //the parser would reduce the statement block and then add the function to the list. We need to a temp list to store the statements and store them to the function.
 };
-
 
 #endif //codegen.h

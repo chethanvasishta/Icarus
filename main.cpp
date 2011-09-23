@@ -2,6 +2,7 @@
 #include <cstdio>
 #include "codegen.h"
 #include "PrintVisitor.h"
+#include "./Dot/dotwriter.h"
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -60,9 +61,11 @@ int main(int argc, char *argv[]){
 		return 0;
 	}
 	PrintVisitor *p = new PrintVisitor();
+	DotWriter *d = new DotWriter();
 	for(int i = 1 ; i < argc ; ++i){
 		Compile(argv[i]);
 		p->Visit(*module);
+		//d->writeDotFile("1.dot", *module);
 	}
 	return 0;
 }

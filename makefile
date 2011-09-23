@@ -13,7 +13,7 @@ errorhandler:
 dotwriter:
 	g++ -c ./Dot/dotwriter.cpp -o dotwriter.o
 visitors:
-	g++ -c PrintVisitor.cpp -o PrintVisitor.o
+	g++ -c PrintVisitor.cpp -o PrintVisitor.o && g++ -c ILBuilder.cpp -o ILBuilder.o
 #debug
 debug: maind lexerd parserd codegend errorhandlerd dotwriterd visitorsd
 	g++ -g *.o -lfl -o IcarusD
@@ -30,6 +30,7 @@ errorhandlerd:
 dotwriterd:
 	g++ -g -c ./Dot/dotwriter.cpp -o dotwriter.o
 visitorsd:
-	g++ -g -c PrintVisitor.cpp -o PrintVisitor.o
+	g++ -g -c PrintVisitor.cpp -o PrintVisitor.o && g++ -g -c ILBuilder.cpp -o ILBuilder.o
+#clean
 clean:
-	rm -rf *.o y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD
+	rm -rf *.o y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD *.dot

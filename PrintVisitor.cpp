@@ -49,6 +49,11 @@ void PrintVisitor::Visit(FunctionProtoType&){
 
 }
 
+void PrintVisitor::Visit(ExpressionStatement& e){
+	cout<<"ExpressionStatement: "<<endl;
+	e.getExpression().accept(*this);
+}
+
 void PrintVisitor::Visit(Function& f){
 	cout<<"Function: "<<f.getName()<<endl;
 	std::list<Statement*> statementList = f.getStatements();
