@@ -51,6 +51,28 @@ CompEA* Module::codegen(){
 	}
 }
 
+void ILBuilder::buildFunctionIL(Function &f){
+	//cout<<"Creating code for function"<<f.getName()<<endl;
+	m_asmOutputFile<<"define "<<"i32 " /* for now */<<"@" /*needs to be before function name*/<<f.getName()<<"(";
+	//output the params
+	
+	m_asmOutputFile<<")"<<"{"<<endl;
+	std::list<Statement*> statementList = f.getStatements();
+	std::list<Statement*>::const_iterator iter = statementList.begin();
+	for(; iter != statementList.end(); ++iter){
+
+	}
+	m_asmOutputFile<<"}"<<endl;
+}
+
 void ILBuilder::buildIL(Module &m){
-	m.codegen();
+	m_asmOutputFile.open("add.ll"); //currently building the ILBuilder for testing add.cpp only
+	if(!m_asmOutputFile.is_open()) //return an err ideally
+		return;
+	m_asmOutputFile << "; Writing assembly code for "<<m.getName()<<endl;
+	std::list<Function*>& funcList = m.getFunctions();
+	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
+		buildFunctionIL(**funcIter);
+	}
+	m_asmOutputFile.close();
 }
