@@ -5,6 +5,9 @@
 #include "CompEA.h"
 #include <list>
 #include <string>
+#include <iostream>
+#include <fstream>
+using namespace std;
 /*
 This class takes in a module, goes through each function and generates three address instructions for each statement
 1. need a variable to get the next temp variable. compilers generally use _Mtx, x >= 0, as temp variable names
@@ -17,10 +20,14 @@ class Instruction;
 
 class ILBuilder{
 public:
-	void buildIL(Module& module);
+	void buildIL(Module& module);	
 private:
+	//private functions
+	void buildFunctionIL(Function &f);
+	
 	std::list<CodeStream*> m_codestreams;
 	CodeStream* m_curCodeStream;
+	ofstream m_asmOutputFile;
 };
 
 
