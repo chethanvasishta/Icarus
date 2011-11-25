@@ -18,12 +18,28 @@ This class takes in a module, goes through each function and generates three add
 class CodeStream;
 class Instruction;
 
-class ILBuilder{
+class ILBuilder : IClassVisitor {
 public:
-	void buildIL(Module& module);	
+	virtual void Visit(Value& );
+	virtual void Visit(Expression&);
+	virtual void Visit(Variable&);
+	virtual void Visit(BinopExpression&);
+	virtual void Visit(FunctionCall&);
+	virtual void Visit(Statement&);
+	virtual void Visit(ExpressionStatement&);	
+	virtual void Visit(Assignment&);
+	virtual void Visit(ReturnStatement&);
+	virtual void Visit(FunctionProtoType&);
+	virtual void Visit(Function&);
+	virtual void Visit(SymbolTable&);	
+	virtual void Visit(Symbol& );
+	virtual void Visit(Module& );
+
+	void buildIL(Module& module);
+	
 private:
 	//private functions
-	void buildFunctionIL(Function &f);
+	//void buildFunctionIL(Function &f);
 	
 	std::list<CodeStream*> m_codestreams;
 	CodeStream* m_curCodeStream;

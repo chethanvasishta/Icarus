@@ -3,55 +3,46 @@
 #include <iostream>
 using namespace std;
 
-CompEA* Constant::codegen(){
+void ILBuilder::Visit(Value& ){
 
 }
 
-CompEA* Variable::codegen(){
+void ILBuilder::Visit(Expression&){
 
 }
 
-CompEA* BinopExpression::codegen(){
+void ILBuilder::Visit(Variable& v){
 
 }
 
-CompEA* FunctionCall::codegen(){
+void ILBuilder::Visit(BinopExpression& b){
+	//m_fileStream<<"Binary Expression: "<<endl;
+}
+
+void ILBuilder::Visit(FunctionCall& f){
+	Function& func = f.getFunction();
+	m_asmOutputFile<<func.getName()<<"()";
+}
+
+void ILBuilder::Visit(Statement&){
+}
+
+void ILBuilder::Visit(Assignment& a){
+	m_asmOutputFile<<"%"<<a.getLVal().getSymbol().getName()<<" = ";
+	a.getRVal().accept(*this);
+}
+
+void ILBuilder::Visit(ReturnStatement& r){
+}
+
+void ILBuilder::Visit(FunctionProtoType&){
 
 }
 
-CompEA* Assignment::codegen(){
-	CompEA *right = m_lval.codegen();	
-	CompEA *left = m_rval.codegen();
-	cout<<"lea "<<right;
-	cout<<"mov "<<"["<<left<<"],"<<right;
-	return NULL; //we wont use it anyway
+void ILBuilder::Visit(ExpressionStatement& e){
 }
 
-CompEA* ReturnStatement::codegen(){
-
-}
-
-CompEA* ExpressionStatement::codegen(){
-
-}
-
-CompEA* Function::codegen(){
-	cout<<"Creating code for function"<<m_name<<endl;
-	std::list<Statement*> statementList = getStatements();
-	std::list<Statement*>::const_iterator iter = statementList.begin();
-	for(; iter != statementList.end(); ++iter){
-		(*iter)->codegen();
-	}
-}
-
-CompEA* Module::codegen(){
-	std::list<Function*>& funcList = getFunctions();
-	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
-		(*funcIter)->codegen();
-	}
-}
-
-void ILBuilder::buildFunctionIL(Function &f){
+void ILBuilder::Visit(Function& f){
 	//cout<<"Creating code for function"<<f.getName()<<endl;
 	m_asmOutputFile<<"define "<<"i32 " /* for now */<<"@" /*needs to be before function name*/<<f.getName()<<"(";
 	//output the params
@@ -68,13 +59,29 @@ void ILBuilder::buildFunctionIL(Function &f){
 	
 	m_asmOutputFile<<")"<<"{"<<endl;
 	std::list<Statement*> statementList = f.getStatements();
-	std::list<Statement*>::const_iterator iter = statementList.begin();
-	for(; iter != statementList.end(); ++iter){
+	std::list<Statement*>::iterator statementPtrIter = statementList.begin();
+	for(; statementPtrIter != statementList.end(); ++statementPtrIter){
 		//generate code for the statements
+		(*statementPtrIter)->accept(*this);
 	}
 	m_asmOutputFile<<";generate a dummy return statement"<<endl;
 	m_asmOutputFile<<"ret i32 0"<<endl;
 	m_asmOutputFile<<"}"<<endl;
+}
+
+void ILBuilder::Visit(SymbolTable&){
+
+}
+
+void ILBuilder::Visit(Symbol& ){
+
+}
+
+void ILBuilder::Visit(Module& m){	
+	std::list<Function*>& funcList = m.getFunctions();
+	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
+		(*funcIter)->accept(*this);
+	}
 }
 
 void ILBuilder::buildIL(Module &m){
@@ -82,9 +89,6 @@ void ILBuilder::buildIL(Module &m){
 	if(!m_asmOutputFile.is_open()) //return an err ideally
 		return;
 	m_asmOutputFile << "; Writing assembly code for "<<m.getName()<<endl;
-	std::list<Function*>& funcList = m.getFunctions();
-	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
-		buildFunctionIL(**funcIter);
-	}
+	m.accept(*this);
 	m_asmOutputFile.close();
 }
