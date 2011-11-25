@@ -57,11 +57,11 @@ void ILBuilder::buildFunctionIL(Function &f){
 	//output the params
 	FunctionProtoType& proto = f.getProtoType();
 	std::list<int>::iterator typeListIter = proto.getTypeList().begin();
-	std::list<std::string>::iterator argNameListIter = f.getArgNameList().begin();
+	std::list<Symbol*>::iterator argSymbolListIter = f.getArgSymbolList().begin();
 	unsigned int numArgs = proto.getTypeList().size();
-	for(unsigned int i = 0 ; i < numArgs ; ++i, ++argNameListIter){
+	for(unsigned int i = 0 ; argSymbolListIter != f.getArgSymbolList().end() ; ++i, ++argSymbolListIter){
 		//get the type,
-		m_asmOutputFile<<"i32 "<<"@"<<*argNameListIter;
+		m_asmOutputFile<<"i32 "<<"%"<<(*argSymbolListIter)->getName();
 		if((i+1) != numArgs)
 			m_asmOutputFile<<",";
 	}
@@ -72,6 +72,8 @@ void ILBuilder::buildFunctionIL(Function &f){
 	for(; iter != statementList.end(); ++iter){
 		//generate code for the statements
 	}
+	m_asmOutputFile<<";generate a dummy return statement"<<endl;
+	m_asmOutputFile<<"ret i32 0"<<endl;
 	m_asmOutputFile<<"}"<<endl;
 }
 

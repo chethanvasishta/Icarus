@@ -178,7 +178,7 @@ private:
 
 class Function{
 public:
-	Function(const std::string& name, FunctionProtoType& protoType, std::list<std::string> argNameList): m_name(name), m_protoType(protoType), m_argNameList(argNameList){}
+	Function(const std::string& name, FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_name(name), m_protoType(protoType), m_argSymbolList(argSymbolList){}
 	~Function();
 
 	//Getter-Setters
@@ -186,7 +186,7 @@ public:
 	std::string getName() const { return m_name; }
 	std::list<Statement*>& getStatements() { return m_statementList; }
 	FunctionProtoType& getProtoType() const { return m_protoType; }
-	std::list<std::string> getArgNameList() const { return m_argNameList; }
+	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
 
 	IcErr addStatement(Statement& s);
 
@@ -203,7 +203,7 @@ private:
 	std::list<Statement*> m_statementList;
 	std::string m_name;
 	FunctionProtoType& m_protoType;
-	std::list<std::string> m_argNameList;
+	std::list<Symbol*> m_argSymbolList;
 
 	//prevent unintended c++ synthesis
 	Function();

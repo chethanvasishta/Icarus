@@ -13,7 +13,7 @@ extern void yyerror(string);
 
 
 extern "C" FILE *yyin;
-static void addSymbol(char *s);
+static Symbol* addSymbol(char *s);
 
 //debug definitions
 static void trace(string,int);
@@ -27,7 +27,7 @@ static int debugLevel = 3;
 
 //globals
 static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList. See if we can add it to a class, say Parser. I don't like globals
-static std::list<std::string> argNameList;
+static std::list<Symbol*> argNameList;
 static std::list<Value*> parameterList;
 static ASTBuilder& builder = *new ASTBuilder();
 yyFlexLexer lexer; //this is our lexer
@@ -77,15 +77,15 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	
 arglist: datatype IDENTIFIER 
 	{
-		dataTypeList.push_back($1); 
-		argNameList.push_back($2);
-		addSymbol($2);
+		dataTypeList.push_back($1);
+		Symbol *sym = addSymbol($2);
+		argNameList.push_back(sym);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
 		dataTypeList.push_back($3);
-		argNameList.push_back($4);
-		addSymbol($4);
+		Symbol *sym = addSymbol($4);
+		argNameList.push_back(sym);
 	}
 	|
 	;
@@ -182,10 +182,12 @@ int yywrap (void ) {
 
 //Helper functions
 
-static void addSymbol(char *s){ // this should have more info like datatype, scope etc
-	IcErr err = builder.addSymbol(*new Symbol(*new std::string(s)));
+static Symbol* addSymbol(char *s){ // this should have more info like datatype, scope etc
+	Symbol *ourSymbol = new Symbol(*new std::string(s));
+	IcErr err = builder.addSymbol(*ourSymbol);
 	if(err)
 		yyerror(errMsg[err]);
+	return ourSymbol;
 }
 
 
