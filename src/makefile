@@ -7,13 +7,13 @@ parser:
 lexer: parser
 	flex -+ lexer.l && $(CC) -c lex.yy.cc -o lexer.o
 main:
-	$(CC) -c *.cpp
+	find -name '*.cpp' -print0|xargs -0 $(CC) -c
 #debug
 
 debug: lexerd parserd maind
 	$(CC) *.o -lfl -o IcarusD
 maind: 
-	$(CC) -g -c *.cpp
+	find -name '*.cpp' -print0|xargs -0 $(CC) -g -c
 parserd:
 	yacc -d parser.y -o y.tab.cc && $(CC) -g -c y.tab.cc -o parser.o
 lexerd: parserd

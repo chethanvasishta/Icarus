@@ -27,6 +27,7 @@ static int debugLevel = 3;
 
 //globals
 static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList. See if we can add it to a class, say Parser. I don't like globals
+static std::list<std::string> argNameList;
 static std::list<Value*> parameterList;
 static ASTBuilder& builder = *new ASTBuilder();
 yyFlexLexer lexer; //this is our lexer
@@ -77,11 +78,13 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 arglist: datatype IDENTIFIER 
 	{
 		dataTypeList.push_back($1); 
+		argNameList.push_back($2);
 		addSymbol($2);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
 		dataTypeList.push_back($3);
+		argNameList.push_back($4);
 		addSymbol($4);
 	}
 	|
@@ -98,7 +101,8 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{' statement_block '}'
 			builder.addProtoType(*fp);
 		}
 		dataTypeList.clear();
-		Function& f = *new Function(string, *fp);
+		Function& f = *new Function(string, *fp, argNameList);
+		argNameList.clear();
 		IcErr err = builder.addFunction(f);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);

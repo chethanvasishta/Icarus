@@ -55,12 +55,22 @@ void ILBuilder::buildFunctionIL(Function &f){
 	//cout<<"Creating code for function"<<f.getName()<<endl;
 	m_asmOutputFile<<"define "<<"i32 " /* for now */<<"@" /*needs to be before function name*/<<f.getName()<<"(";
 	//output the params
+	FunctionProtoType& proto = f.getProtoType();
+	std::list<int>::iterator typeListIter = proto.getTypeList().begin();
+	std::list<std::string>::iterator argNameListIter = f.getArgNameList().begin();
+	unsigned int numArgs = proto.getTypeList().size();
+	for(unsigned int i = 0 ; i < numArgs ; ++i, ++argNameListIter){
+		//get the type,
+		m_asmOutputFile<<"i32 "<<"@"<<*argNameListIter;
+		if((i+1) != numArgs)
+			m_asmOutputFile<<",";
+	}
 	
 	m_asmOutputFile<<")"<<"{"<<endl;
 	std::list<Statement*> statementList = f.getStatements();
 	std::list<Statement*>::const_iterator iter = statementList.begin();
 	for(; iter != statementList.end(); ++iter){
-
+		//generate code for the statements
 	}
 	m_asmOutputFile<<"}"<<endl;
 }
