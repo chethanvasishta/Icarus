@@ -4,6 +4,7 @@
 #include "PrintVisitor.h"
 #include "./Dot/dotwriter.h"
 #include "ILBuilder.h"
+#include <cstdlib>
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -14,6 +15,11 @@ using namespace std;
 //global variables
 Module *module;
 
+void genExecutable(){
+	int i = system("llvm-as temp.ll"); //check if llvm is installed
+	i = system("llc temp.bc");
+	i = system("g++ temp.s");//we will generate a a.out	
+}
 
 int Compile(char *fileName){
 #if DEBUG
@@ -21,7 +27,8 @@ int Compile(char *fileName){
 #endif	
 	module = ParseFile(fileName); //this function should return us the link to the module created by the parser
 	ILBuilder myILBuilder;
-	myILBuilder.buildIL(*module);
+	myILBuilder.buildIL(*module); //we have our temp.ll file
+	genExecutable();	
 	return 0;
 }
 

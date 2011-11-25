@@ -78,7 +78,7 @@ void ILBuilder::buildFunctionIL(Function &f){
 }
 
 void ILBuilder::buildIL(Module &m){
-	m_asmOutputFile.open("add.ll"); //currently building the ILBuilder for testing add.cpp only
+	m_asmOutputFile.open("temp.ll");
 	if(!m_asmOutputFile.is_open()) //return an err ideally
 		return;
 	m_asmOutputFile << "; Writing assembly code for "<<m.getName()<<endl;
