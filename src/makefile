@@ -1,23 +1,23 @@
 CC = g++
 
 all: lexer parser main
-	$(CC) *.o -lfl -o Icarus
+	$(CC) obj/*.o -lfl -o Icarus
 parser:
-	yacc -d parser.y -o y.tab.cc && $(CC) -c y.tab.cc -o parser.o
+	yacc -d parser.y -o y.tab.cc && $(CC) -c y.tab.cc -o parser.o && rm y.tab.cc
 lexer: parser
-	flex -+ lexer.l && $(CC) -c lex.yy.cc -o lexer.o
+	flex -+ lexer.l && $(CC) -c lex.yy.cc -o lexer.o && rm lex.yy.cc y.tab.hh
 main:
-	find -name '*.cpp' -print0|xargs -0 $(CC) -c
+	find -name '*.cpp' -print0 | xargs -0 $(CC) -c && mkdir -p obj && mv *.o ./obj/
 #debug
 
 debug: lexerd parserd maind
-	$(CC) *.o -lfl -o IcarusD
+	$(CC) obj/*.o -lfl -o IcarusD
 maind: 
-	find -name '*.cpp' -print0|xargs -0 $(CC) -g -c
+	find -name '*.cpp' -print0 | xargs -0 $(CC) -g -c && mkdir -p obj && mv *.o ./obj/
 parserd:
-	yacc -d parser.y -o y.tab.cc && $(CC) -g -c y.tab.cc -o parser.o
+	yacc -d parser.y -o y.tab.cc && $(CC) -g -c y.tab.cc -o parser.o && rm y.tab.cc
 lexerd: parserd
-	flex -+ lexer.l && $(CC) -g -c lex.yy.cc -o lexer.o
+	flex -+ lexer.l && $(CC) -g -c lex.yy.cc -o lexer.o && rm lex.yy.cc y.tab.hh
 #clean
 clean:
-	rm -rf *.o y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD *.dot
+	rm -rf obj y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD *.dot
