@@ -13,6 +13,11 @@ using namespace std;
 Everything should be a Value
 a constant, an identifier, an expression, a function call etc , just like LLVM
 */
+
+//forward declarations
+class GenIL;
+
+//definitions
 class Value{
 public:
 	virtual void accept(IClassVisitor &){}
@@ -32,6 +37,8 @@ class Constant: public Expression {
 public:
 	virtual void accept(IClassVisitor &){}
 	virtual CompEA* codegen();
+
+	virtual Value* genIL(GenIL*);
 private:
 };
 
@@ -44,6 +51,7 @@ public:
 	
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);	
 private:
 	Symbol& m_symbol;//check this
 };
@@ -66,6 +74,7 @@ public:
 	//Visitors
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 private:
 	Value& m_left;
 	Value& m_right;
@@ -84,6 +93,7 @@ public:
 	//Visitors
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 private:
 	Function& m_function;
 	std::list<Value*> m_paramList;
@@ -107,6 +117,7 @@ public:
 	//Visitors
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 private:
 	Variable& m_lval;
 	Value& m_rval;
@@ -123,6 +134,7 @@ public:
 	//Visitors	
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 private:
 	Value *m_value; //return statement can have NULL expression
 	ReturnStatement();
@@ -137,6 +149,7 @@ public:
 	//Visitors	
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 private:
 	Expression& m_expression;
 	ExpressionStatement();
@@ -221,6 +234,7 @@ public:
 	IcErr addSymbol(Symbol& sym);
 
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
@@ -259,6 +273,7 @@ public:
 	IcErr insertStatement(Function& f, Statement& s);
 
 	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Module& m);
