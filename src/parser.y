@@ -19,7 +19,7 @@ static Symbol* addSymbol(char *s);
 static void trace(string,int);
 #define DEBUG 1
 #if DEBUG
-static int debugLevel = 3;
+static int debugLevel = 1;
 #endif 
 
 #define trace1(s) trace(s, 1)
@@ -91,7 +91,7 @@ arglist: datatype IDENTIFIER
 	;
 //as and when we find the identifiers , we need to add them to a list and use them while constructing the prototype/func
 
-func_defn: datatype IDENTIFIER '(' arglist ')' '{' statement_block '}' 
+func_defn: datatype IDENTIFIER '(' arglist ')' '{' 
 	{
 		trace2("function definition ");
 		const std::string& string = $2;
@@ -106,8 +106,14 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{' statement_block '}'
 		IcErr err = builder.addFunction(f);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);
-	};
+	}
 
+	statement_block '}' 
+	{	//we should clear the m_curFunction after this, so that any global decl will not be a part of prev function's symtab
+		builder.clearCurrentFunctionPtr();	
+	}
+	;
+	
 statement_block: statement_block statement |  ;
 	
 statement: declaration 

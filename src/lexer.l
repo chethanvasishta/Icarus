@@ -15,6 +15,8 @@
 
 "return" { return RETURN; }
 
+"//".*\n ;
+
 [-+*/;=,)(\{\}] { return *yytext; }
 
 [0-9]+ { yylval.integer = atoi(yytext);  return NUMBER; }

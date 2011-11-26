@@ -66,8 +66,11 @@ IcErr Function::addStatement(Statement& s){
 
 std::ostream& operator<<(std::ostream& stream, const Function& f){
 	stream<<"Function: "<<f.m_name<<endl;
-	//print the statements here
-	
+	//print the statements here	
+}
+
+IcErr Function::addSymbol(Symbol& sym){
+	m_symbolTable.add(sym);
 }
 
 void Function::accept(IClassVisitor &visitor){
@@ -156,27 +159,21 @@ ASTBuilder::ASTBuilder():m_module(*new Module("globalModule")),m_curFunction(NUL
 }
 
 IcErr ASTBuilder::addSymbol(Symbol& s){
+	if(m_curFunction != NULL) //we are in global space
+		return m_curFunction->addSymbol(s);
 	return m_module.addSymbol(s);
 }
 
 IcErr ASTBuilder::addFunction(Function& f){
 	IcErr err = m_module.addFunction(f);	
-	if(!err){
+	if(!err)
 		m_curFunction = &f;
-		std::list<Statement*>::const_iterator iter = m_tempStatementList.begin();
-		for(; iter != m_tempStatementList.end(); ++iter){
-			err = f.addStatement(*(*iter));
-			if(err)
-				break;
-		}
-	}
-	m_tempStatementList.clear();
 	return err;
 }
 
 IcErr ASTBuilder::insertStatement(Statement& s){
-	m_tempStatementList.push_back(&s);
-	return eNoErr;// m_module.insertStatement(*m_curFunction, s);
+	return m_curFunction->addStatement(s);
+	//m_tempStatementList.push_back(&s);
 }
 
 IcErr ASTBuilder::addProtoType(FunctionProtoType& fp){
@@ -188,6 +185,15 @@ FunctionProtoType* ASTBuilder::getProtoType(const std::string name, std::list<in
 }
 
 Symbol* ASTBuilder::getSymbol(std::string name){
+	if(m_curFunction != NULL){}
+		std::list<Symbol*>& funcSymbolList = m_curFunction->getSymbols();
+		std::list<Symbol*>::const_iterator symIter = funcSymbolList.begin();
+		for(; symIter!= funcSymbolList.end() ; ++symIter ){
+			if((*symIter)->getName() == name)
+				return *symIter;
+	}		
+
+	//search in the global symbol table
 	std::list<Symbol*>& symbolList = m_module.getSymbols();
 	std::list<Symbol*>::const_iterator iter = symbolList.begin();
 	for(; iter!= symbolList.end() ; ++iter ){

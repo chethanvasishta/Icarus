@@ -1,3 +1,4 @@
+int global1, global2;
 int add(int x, int y)
 {
 	int z;

@@ -175,41 +175,6 @@ private:
 	FunctionProtoType();
 };
 
-
-class Function{
-public:
-	Function(const std::string& name, FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_name(name), m_protoType(protoType), m_argSymbolList(argSymbolList){}
-	~Function();
-
-	//Getter-Setters
-
-	std::string getName() const { return m_name; }
-	std::list<Statement*>& getStatements() { return m_statementList; }
-	FunctionProtoType& getProtoType() const { return m_protoType; }
-	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
-
-	IcErr addStatement(Statement& s);
-
-	virtual CompEA* codegen();
-
-	//overloaded operators
-	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
-
-	//Visitors
-	virtual void accept(IClassVisitor &);
-
-	
-private:
-	std::list<Statement*> m_statementList;
-	std::string m_name;
-	FunctionProtoType& m_protoType;
-	std::list<Symbol*> m_argSymbolList;
-
-	//prevent unintended c++ synthesis
-	Function();
-	
-};
-
 class Symbol{
 public:
 	Symbol(std::string& name): m_name(name){}
@@ -238,6 +203,43 @@ private:
 	std::list<Symbol*> m_symbols;
 };
 
+
+class Function{
+public:
+	Function(const std::string& name, FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_name(name), m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()){}
+	~Function();
+
+	//Getter-Setters
+
+	std::string getName() const { return m_name; }
+	std::list<Statement*>& getStatements() { return m_statementList; }
+	FunctionProtoType& getProtoType() const { return m_protoType; }
+	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
+	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
+
+	IcErr addStatement(Statement& s);
+	IcErr addSymbol(Symbol& sym);
+
+	virtual CompEA* codegen();
+
+	//overloaded operators
+	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
+
+	//Visitors
+	virtual void accept(IClassVisitor &);
+
+	
+private:
+	std::list<Statement*> m_statementList;
+	std::string m_name;
+	FunctionProtoType& m_protoType;
+	std::list<Symbol*> m_argSymbolList;
+	SymbolTable& m_symbolTable; //we should have a table for the function locals. this will get precendence over the 
+
+	//prevent unintended c++ synthesis
+	Function();
+	
+};
 
 class Module{
 public:
@@ -284,6 +286,7 @@ public:
 	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
 	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
 	Function* getFunction(const std::string name);
+	void clearCurrentFunctionPtr() { m_curFunction = NULL; }
 
 	Module& getModule() { return m_module; }
 private:
