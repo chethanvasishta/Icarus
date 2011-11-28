@@ -22,12 +22,14 @@ class Value{
 public:
 	virtual void accept(IClassVisitor &){}
 	virtual CompEA* codegen() = 0;
+	virtual Value* genIL(GenIL*) = 0;
 };
 
 class Expression: public Value {
 public:
 	virtual void accept(IClassVisitor &)=0;
 	virtual CompEA* codegen() = 0;
+	virtual Value* genIL(GenIL*) = 0;
 };
 
 /*

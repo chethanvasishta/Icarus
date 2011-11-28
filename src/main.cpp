@@ -5,6 +5,7 @@
 #include "./Dot/dotwriter.h"
 #include "ILBuilder.h"
 #include <cstdlib>
+#include "genIL.h"
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -26,6 +27,8 @@ int Compile(char *fileName){
 	std::cout<<"Compiling "<<fileName<<endl; 
 #endif	
 	module = ParseFile(fileName); //this function should return us the link to the module created by the parser
+	GenIL *myILGen = new GenIL(*module);
+	module = myILGen->generateIL();
 	ILBuilder myILBuilder;
 	myILBuilder.buildIL(*module); //we have our temp.ll file
 	genExecutable();	

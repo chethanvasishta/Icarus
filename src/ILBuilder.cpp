@@ -12,11 +12,21 @@ void ILBuilder::Visit(Expression&){
 }
 
 void ILBuilder::Visit(Variable& v){
-
+	m_asmOutputFile<<"%"<<v.getSymbol().getName();
 }
 
 void ILBuilder::Visit(BinopExpression& b){
 	//m_fileStream<<"Binary Expression: "<<endl;
+	m_asmOutputFile<<b.getLeftValue().accept(*this);
+	char c = '+'; //we can make it a string
+	switch(b.getOperation()){
+		case Add: c = '+'; break;
+		case Sub: c = '-'; break;
+		case Mul: c = '*'; break;
+		case Div: c = '/'; break;
+	}
+	m_asmOutputFile<<c;
+	m_asmOutputFile<<b.getRightValue().accept(*this);	
 }
 
 void ILBuilder::Visit(FunctionCall& f){
@@ -28,7 +38,7 @@ void ILBuilder::Visit(Statement&){
 }
 
 void ILBuilder::Visit(Assignment& a){
-	m_asmOutputFile<<"%"<<a.getLVal().getSymbol().getName()<<" = ";
+	m_asmOutputFile<<a.getLVal().accept(*this)<<" = ";
 	a.getRVal().accept(*this);
 }
 
