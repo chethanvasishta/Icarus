@@ -13,14 +13,22 @@ Value* Variable::genIL(GenIL* g){
 Value* BinopExpression::genIL(GenIL* g){
 	//of lval or rval is a binop, generate an assignment statement and insert
 	Value *lVal = NULL;
-	if(dynamic_cast<BinopExpression*>(&getLeftValue())) // we need to check for function calls etc
-		lVal = new Assignment(g->getNextVariable(), *getLeftValue().genIL(g));
+	if(dynamic_cast<BinopExpression*>(&getLeftValue())){ // we need to check for function calls etc
+		Variable& nextVarRef = g->getNextVariable();
+		Assignment* tempAssign = new Assignment(nextVarRef, *getLeftValue().genIL(g));
+		g->getBuilder().insertStatement(*tempAssign);
+		lVal = &nextVarRef;
+	}
 	else
 		lVal = &getLeftValue();
 	
 	Value *rVal = NULL;
-	if(dynamic_cast<BinopExpression*>(&getRightValue())) // we need to check for function calls etc
-		rVal = new Assignment(g->getNextVariable(), *getRightValue().genIL(g));
+	if(dynamic_cast<BinopExpression*>(&getRightValue())){ // we need to check for function calls etc
+		Variable& nextVarRef = g->getNextVariable();
+		Assignment* tempAssign = new Assignment(nextVarRef, *getRightValue().genIL(g));
+		g->getBuilder().insertStatement(*tempAssign);
+		rVal = &nextVarRef;
+	}
 	else
 		rVal = &getRightValue();
 	return new BinopExpression(*lVal, *rVal, getOperation());
@@ -47,8 +55,11 @@ Value* Function::genIL(GenIL* g){
 	Function& funcRef = *(new Function(getName(), getProtoType(), getArgSymbolList()));
 	g->getBuilder().addFunction(funcRef);
 	std::list<Statement*>::iterator iter = getStatements().begin();
-	for(; iter != getStatements().end(); ++iter)
-		(*iter)->genIL(g);	
+	for(; iter != getStatements().end(); ++iter){
+		Statement *stmt = (Statement*)(*iter)->genIL(g);
+		g->getBuilder().insertStatement(*stmt);
+	}
+		
 }
 
 Value* Module::genIL(GenIL* g){

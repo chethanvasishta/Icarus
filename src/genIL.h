@@ -8,7 +8,7 @@ class GenIL {
 public:
 	GenIL(Module &m): m_module(m), m_astBuilder(*new ASTBuilder()), m_tempSeed(0) {}
 	Module* generateIL();
-	ASTBuilder getBuilder() { return m_astBuilder; }
+	ASTBuilder& getBuilder() { return m_astBuilder; }
 	Variable& getNextVariable();
 private:
 	Module& m_module;
