@@ -17,21 +17,37 @@ void ILBuilder::Visit(Variable& v){
 
 void ILBuilder::Visit(BinopExpression& b){
 	//m_fileStream<<"Binary Expression: "<<endl;
-	b.getLeftValue().accept(*this);
-	char c = '+'; //we can make it a string
 	switch(b.getOperation()){
-		case BinopExpression::Add: c = '+'; break;
-		case BinopExpression::Sub: c = '-'; break;
-		case BinopExpression::Mul: c = '*'; break;
-		case BinopExpression::Div: c = '/'; break;
+		case BinopExpression::Add:
+			m_asmOutputFile<<"add "<<"i32 ";			
+		 	break;
+		 case BinopExpression::Sub:
+			m_asmOutputFile<<"sub "<<"i32 ";
+		 	break;
+		 case BinopExpression::Mul:
+			m_asmOutputFile<<"mul "<<"i32 ";
+		 	break;
+		case BinopExpression::Div:
+			m_asmOutputFile<<"div "<<"i32 ";
+		 	break;
 	}
-	m_asmOutputFile<<c;
-	b.getRightValue().accept(*this);
+	b.getLeftValue().accept(*this);
+	m_asmOutputFile<<",";
+	b.getRightValue().accept(*this);	
 }
 
 void ILBuilder::Visit(FunctionCall& f){
 	Function& func = f.getFunction();
-	m_asmOutputFile<<func.getName()<<"()";
+	m_asmOutputFile<<"call "<<"i32 "<<"@"<<func.getName()<<"(";
+	std::list<Value*>::iterator paramIter = f.getParamList().begin();
+	int n = f.getParamList().size();
+	for(; paramIter != f.getParamList().end(); ++paramIter, --n){
+		m_asmOutputFile<<"i32 ";
+		(*paramIter)->accept(*this);
+		if(n > 1)
+			m_asmOutputFile<<",";
+	}
+	m_asmOutputFile<<")";
 }
 
 void ILBuilder::Visit(Statement&){

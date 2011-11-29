@@ -9,10 +9,9 @@ int printf(int c){
 	return c;
 }
 
-int main(){
-	int a, b;
+int main(int a, int b){
 	int c;
 	c = add(b, a);
-	c = printf(c);
+	//c = printf(c);
 	return c;
 }
