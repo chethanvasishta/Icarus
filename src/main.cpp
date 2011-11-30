@@ -45,12 +45,7 @@ int main(int argc, char *argv[]){
 		std::cout<<"should input a file to compile"<<endl;
 		return 0;
 	}
-	PrintVisitor *p = new PrintVisitor();
-	DotWriter *d = new DotWriter();
-	for(int i = 1 ; i < argc ; ++i){
-		Compile(argv[i]);
-		p->Visit(*module);
-		//d->writeDotFile("1.dot", *module);
-	}
+	for(int i = 1 ; i < argc ; ++i)
+		Compile(argv[i]);	
 	return 0;
 }
