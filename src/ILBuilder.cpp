@@ -1,6 +1,7 @@
 #include "ILBuilder.h"
 #include "codegen.h"
 #include <iostream>
+#include <llvm/Module.h>
 using namespace std;
 
 void ILBuilder::Visit(Value& ){
@@ -61,6 +62,14 @@ void ILBuilder::Visit(Assignment& a){
 }
 
 void ILBuilder::Visit(ReturnStatement& r){
+	m_asmOutputFile<<"ret ";
+	if(r.getReturnValue() != NULL){
+		m_asmOutputFile<<"i32 ";
+		r.getReturnValue()->accept(*this);
+	}else{
+		m_asmOutputFile<<"void ";
+	}	
+	m_asmOutputFile<<endl;
 }
 
 void ILBuilder::Visit(FunctionProtoType&){

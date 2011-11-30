@@ -1,5 +1,11 @@
 CC = g++
 
+LLVM_MODULES = core jit native
+
+CPPFLAGS = `llvm-config --cppflags $(LLVM_MODULES)`
+LDFLAGS = `llvm-config --ldflags $(LLVM_MODULES)`
+LIBS = `llvm-config --libs $(LLVM_MODULES)`
+
 all: lexer parser main
 	$(CC) obj/*.o -lfl -o Icarus
 parser:
@@ -7,13 +13,13 @@ parser:
 lexer: parser
 	flex -+ lexer.l && $(CC) -c lex.yy.cc -o lexer.o && rm lex.yy.cc y.tab.hh
 main:
-	find -name '*.cpp' -print0 | xargs -0 $(CC) -c && mkdir -p obj && mv *.o ./obj/
+	find -name '*.cpp' -print0 | xargs -0 $(CC) -c $(CPPFLAGS) && mkdir -p obj && mv *.o ./obj/
 #debug
 
 debug: lexerd parserd maind
 	$(CC) obj/*.o -lfl -o IcarusD
 maind: 
-	find -name '*.cpp' -print0 | xargs -0 $(CC) -g -c && mkdir -p obj && mv *.o ./obj/
+	find -name '*.cpp' -print0 | xargs -0 $(CC) -g -c $(CPPFLAGS) && mkdir -p obj && mv *.o ./obj/
 parserd:
 	yacc -d parser.y -o y.tab.cc && $(CC) -g -c y.tab.cc -o parser.o
 lexerd: parserd
