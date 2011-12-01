@@ -6,6 +6,7 @@
 #include "ILBuilder.h"
 #include <cstdlib>
 #include "genIL.h"
+#include "genllvm.h"
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -34,9 +35,15 @@ int Compile(char *fileName){
 	PrintVisitor p;
 	p.Visit(*module);
 #endif
-	ILBuilder myILBuilder;
-	myILBuilder.buildIL(*module); //we have our temp.ll file
-	genExecutable();	
+	bool llvmenabled = true;
+	if(llvmenabled){
+		llvm::GenLLVM genLLVM;
+		genLLVM.generateLLVM(*module);	
+	}else{
+		ILBuilder myILBuilder;
+		myILBuilder.buildIL(*module); //we have our temp.ll file
+		genExecutable();
+	}
 	return 0;
 }
 

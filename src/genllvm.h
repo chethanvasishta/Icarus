@@ -4,12 +4,13 @@
 #include "IClassVisitor.h"
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
+#include <llvm/Module.h>
 
 namespace llvm{
 
 class GenLLVM : IClassVisitor {
 public:
-//	GenLLVM() : m_irBuilder(*new IRBuilder(getGlobalContext())){}
+	GenLLVM();
 	virtual void Visit(::Value& );
 	virtual void Visit(::Expression&);
 	virtual void Visit(::Variable&);
@@ -27,7 +28,8 @@ public:
 	
 	void generateLLVM(::Module &);
 private:
-	IRBuilder<> m_irBuilder;
+	//IRBuilder<>& m_irBuilder;
+	Module& m_module;
 };
 
 }
