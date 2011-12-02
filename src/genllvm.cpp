@@ -45,7 +45,9 @@ void GenLLVM::Visit(::ExpressionStatement& e){
 }
 
 void GenLLVM::Visit(::Function& f){
-	
+	std::list< ::Statement*>::iterator sIter = f.getStatements().begin();
+	for(; sIter != f.getStatements().end(); ++sIter)
+		(*sIter)->accept(*this);
 }
 
 void GenLLVM::Visit(::SymbolTable&){
@@ -61,9 +63,19 @@ void GenLLVM::Visit(::Module& m){
 
 	for(std::list< ::Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
 
-		 std::vector<const Type*> Doubles(1, Type::getDoubleTy(getGlobalContext()));
-		 FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()), Doubles, false);
+		 std::vector<const Type*> args;
+		 FunctionProtoType& fp = (*funcIter)->getProtoType();
+		 std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
+		 for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
+		 	args.push_back(Type::getInt32Ty(getGlobalContext()));
+		 }
+		 FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false);
 		 Function *F = Function::Create(FT, Function::ExternalLinkage, (*funcIter)->getName(), &m_module);
+
+		 //Set names for the arguments
+		 std::list< ::Symbol*>::iterator symIter = (*funcIter)->getArgSymbolList().begin(); //assert that number of symbols equal number of elements in typelist
+		 for(Function::arg_iterator argIter = F->arg_begin(); argIter != F->arg_end(); ++argIter, ++symIter)
+		 	argIter->setName((*symIter)->getName());
 		
 		(*funcIter)->accept(*this);
 	}
