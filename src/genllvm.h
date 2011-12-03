@@ -5,33 +5,21 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
+#include <map>
+#include <string>
 
-namespace llvm{
-
-class GenLLVM : IClassVisitor {
+class GenLLVM {
 public:
-	GenLLVM();
-	virtual void Visit(::Value& );
-	virtual void Visit(::Expression&);
-	virtual void Visit(::Variable&);
-	virtual void Visit(::BinopExpression&);
-	virtual void Visit(::FunctionCall&);
-	virtual void Visit(::Statement&);
-	virtual void Visit(::ExpressionStatement&);	
-	virtual void Visit(::Assignment&);
-	virtual void Visit(::ReturnStatement&);
-	virtual void Visit(::FunctionProtoType&);
-	virtual void Visit(::Function&);
-	virtual void Visit(::SymbolTable&);	
-	virtual void Visit(::Symbol& );
-	virtual void Visit(::Module& );
+	GenLLVM();	
+	void generateLLVM(Module &);
+	llvm::IRBuilder<>& getBuilder() { return m_irBuilder; }
+	llvm::Module& getModule() { return m_module; }
+	std::map<std::string, llvm::Value*>& getNamedValues() { return m_namedValues; }
 	
-	void generateLLVM(::Module &);
 private:
-	//IRBuilder<>& m_irBuilder;
-	Module& m_module;
+	llvm::IRBuilder<>& m_irBuilder;
+	llvm::Module& m_module;
+	std::map<std::string, llvm::Value*> m_namedValues; //to hold the temp allocations in the function
 };
-
-}
 
 #endif //GENLLVM_H

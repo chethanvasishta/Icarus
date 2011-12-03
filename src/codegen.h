@@ -7,6 +7,17 @@
 #include "icerr.h"
 #include "IClassVisitor.h"
 #include "CompEA.h"
+
+//C++ Macros to use non C++ standard macro usage. See DataTypes.h for more details
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
+#endif
+
+#include <llvm/Value.h>
+#include <llvm/Module.h>
 using namespace std;
 //definitions
 /*
@@ -17,6 +28,7 @@ a constant, an identifier, an expression, a function call etc , just like LLVM
 //forward declarations
 
 class GenIL;
+class GenLLVM;
 
 //definitions
 class Value{
@@ -24,6 +36,7 @@ public:
 	virtual void accept(IClassVisitor &){}
 	virtual CompEA* codegen() = 0;
 	virtual Value* genIL(GenIL*) = 0;
+	virtual llvm::Value* genLLVM(GenLLVM*) = 0;
 };
 
 class Expression: public Value {
@@ -31,6 +44,7 @@ public:
 	virtual void accept(IClassVisitor &)=0;
 	virtual CompEA* codegen() = 0;
 	virtual Value* genIL(GenIL*) = 0;
+	virtual llvm::Value* genLLVM(GenLLVM*) = 0;
 };
 
 /*
@@ -42,6 +56,7 @@ public:
 	virtual CompEA* codegen();
 
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);	
 private:
 };
 
@@ -54,7 +69,8 @@ public:
 	
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
-	virtual Value* genIL(GenIL*);	
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Symbol& m_symbol;//check this
 };
@@ -78,6 +94,7 @@ public:
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Value& m_left;
 	Value& m_right;
@@ -97,6 +114,7 @@ public:
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Function& m_function;
 	std::list<Value*> m_paramList;
@@ -121,6 +139,7 @@ public:
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Variable& m_lval;
 	Value& m_rval;
@@ -138,6 +157,7 @@ public:
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Value *m_value; //return statement can have NULL expression
 	ReturnStatement();
@@ -153,6 +173,7 @@ public:
 	virtual void accept(IClassVisitor &);
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
 	Expression& m_expression;
 	ExpressionStatement();
@@ -232,12 +253,14 @@ public:
 	FunctionProtoType& getProtoType() const { return m_protoType; }
 	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
+	SymbolTable& getSymbolTable() { return m_symbolTable; }
 
 	IcErr addStatement(Statement& s);
 	IcErr addSymbol(Symbol& sym);
 
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
@@ -277,6 +300,7 @@ public:
 
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 
 	//overloaded operators
 	friend std::ostream& operator<<(std::ostream& stream, const Module& m);

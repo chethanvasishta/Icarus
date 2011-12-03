@@ -61,13 +61,20 @@ Value* Function::genIL(GenIL* g){
 		Statement *stmt = (Statement*)(*iter)->genIL(g);
 		g->getBuilder().insertStatement(*stmt);
 	}
+	//we need to copy the symbols too;
+	std::list<Symbol*>::iterator symIter = getSymbols().begin();
+	for(; symIter != getSymbols().end(); ++symIter){		
+		funcRef.addSymbol(*new Symbol(**symIter));
+	}
+
 }
 
 Value* Module::genIL(GenIL* g){
-	std::list<Function*>& funcList = getFunctions();	
+	std::list<Function*>& funcList = getFunctions();
 	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
 		(*funcIter)->genIL(g);
 	}
+	//we need to copy the symbols too;
 	return NULL; //we wont use it anyway. This function should actually return nothing
 }
 

@@ -3,90 +3,104 @@
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
+using llvm::Type;
+using llvm::BasicBlock;
+inline llvm::LLVMContext& getGlobalContext(){ //just a double dispatch
+	return llvm::getGlobalContext();
+}
 
-namespace llvm{
-
-void GenLLVM::Visit(::Value& ){
+llvm::Value* Constant::genLLVM(GenLLVM*){
 
 }
 
-void GenLLVM::Visit(::Expression&){
-
+llvm::Value* Variable::genLLVM(GenLLVM* g){
+	//const llvm::Function* curFunc = g->getBuilder().GetInsertPoint()->getParent();
+	return g->getNamedValues()[getSymbol().getName()];
 }
 
-void GenLLVM::Visit(::Variable& v){
-	
-}
-
-void GenLLVM::Visit(::BinopExpression& b){
-	
-}
-
-void GenLLVM::Visit(::FunctionCall& f){
-	
-}
-
-void GenLLVM::Visit(::Statement&){
-}
-
-void GenLLVM::Visit(::Assignment& a){
-	
-}
-
-void GenLLVM::Visit(::ReturnStatement& r){
-	
-}
-
-void GenLLVM::Visit(::FunctionProtoType&){
-
-}
-
-void GenLLVM::Visit(::ExpressionStatement& e){
-}
-
-void GenLLVM::Visit(::Function& f){
-	std::list< ::Statement*>::iterator sIter = f.getStatements().begin();
-	for(; sIter != f.getStatements().end(); ++sIter)
-		(*sIter)->accept(*this);
-}
-
-void GenLLVM::Visit(::SymbolTable&){
-
-}
-
-void GenLLVM::Visit(::Symbol& ){
-
-}
-
-void GenLLVM::Visit(::Module& m){	
-	std::list< ::Function* >& funcList = m.getFunctions();
-
-	for(std::list< ::Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
-
-		 std::vector<const Type*> args;
-		 FunctionProtoType& fp = (*funcIter)->getProtoType();
-		 std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
-		 for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
-		 	args.push_back(Type::getInt32Ty(getGlobalContext()));
-		 }
-		 FunctionType *FT = FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false);
-		 Function *F = Function::Create(FT, Function::ExternalLinkage, (*funcIter)->getName(), &m_module);
-
-		 //Set names for the arguments
-		 std::list< ::Symbol*>::iterator symIter = (*funcIter)->getArgSymbolList().begin(); //assert that number of symbols equal number of elements in typelist
-		 for(Function::arg_iterator argIter = F->arg_begin(); argIter != F->arg_end(); ++argIter, ++symIter)
-		 	argIter->setName((*symIter)->getName());
-		
-		(*funcIter)->accept(*this);
+llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
+	llvm::IRBuilder<>& builder = g->getBuilder();
+	switch(getOperation()){
+		case Add:
+			return builder.CreateAdd(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");
+		 	break;
+		 case Sub:
+ 			return builder.CreateSub(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");			
+		 	break;
+		 case Mul:
+			return builder.CreateMul(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");			
+		 	break;
+		case Div:
+			return builder.CreateSDiv(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");
+		 	break;
 	}
 }
 
-void GenLLVM::generateLLVM(::Module &m){
-	m.accept(*this);
+llvm::Value* FunctionCall::genLLVM(GenLLVM*){
+
+}
+
+llvm::Value* Assignment::genLLVM(GenLLVM* g){
+	return g->getBuilder().CreateStore(getLVal().genLLVM(g), getRVal().genLLVM(g), false);
+}
+
+llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
+
+}
+
+llvm::Value* ::ExpressionStatement::genLLVM(GenLLVM*){
+
+}
+
+llvm::Value* Function::genLLVM(GenLLVM* g){
+
+	std::vector<const Type*> args;
+	FunctionProtoType& fp = getProtoType();
+	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
+	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
+		args.push_back(Type::getInt32Ty(getGlobalContext()));
+	}
+	
+	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false); //set the proper return type
+	llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, getName(), &g->getModule());
+
+	BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
+	g->getBuilder().SetInsertPoint(BB);
+	
+	//Set names for the arguments and allocate them
+	 //assert that number of symbols equal number of elements in typelist
+	llvm::Function::arg_iterator argIter = F->arg_begin();
+	for(std::list<Symbol*>::iterator symIter = getArgSymbolList().begin();
+		argIter != F->arg_end(); ++argIter, ++symIter){
+		argIter->setName((*symIter)->getName());
+
+		//m_irBuilder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName()); //its creating new names, I guess we can use the ones in the function definition itself
+		g->getNamedValues()[argIter->getName()] = &(*argIter);
+	}
+
+	//assume only the local symbols are visited now
+	std::list<Symbol*>::iterator symIter = getSymbols().begin();
+	for(; symIter != getSymbols().end(); ++symIter){		
+		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName());
+	}
+	
+	std::list<Statement*>::iterator sIter = getStatements().begin();
+	for(; sIter != getStatements().end(); ++sIter)
+		(*sIter)->genLLVM(g);
+}
+
+llvm::Value* Module::genLLVM(GenLLVM* g){
+	std::list<Function*>& funcList = getFunctions();	
+	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
+		(*funcIter)->genLLVM(g);
+	}
+	return NULL; //we wont use it anyway. This function should actually return nothing
+}
+
+void GenLLVM::generateLLVM(Module &m){
+	m.genLLVM(this);
 	m_module.dump();
 }
 
-GenLLVM::GenLLVM() : m_module(*new Module("MyModule", getGlobalContext())) {
-}
-
+GenLLVM::GenLLVM() : m_module(*new llvm::Module("MyModule", getGlobalContext())), m_irBuilder(*new llvm::IRBuilder<>(getGlobalContext())) {
 }

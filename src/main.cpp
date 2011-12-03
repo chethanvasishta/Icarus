@@ -37,7 +37,7 @@ int Compile(char *fileName){
 #endif
 	bool llvmenabled = true;
 	if(llvmenabled){
-		llvm::GenLLVM genLLVM;
+		GenLLVM genLLVM;
 		genLLVM.generateLLVM(*module);	
 	}else{
 		ILBuilder myILBuilder;
