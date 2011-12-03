@@ -3,6 +3,7 @@
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
+
 using llvm::Type;
 using llvm::BasicBlock;
 inline llvm::LLVMContext& getGlobalContext(){ //just a double dispatch
@@ -36,8 +37,30 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 	}
 }
 
-llvm::Value* FunctionCall::genLLVM(GenLLVM*){
+//Helper function to get a llvm function type from our function
+llvm::FunctionType& getFunctionType(Function& f){
+	std::vector<const Type*> args;
+	FunctionProtoType& fp = f.getProtoType();
+	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
+	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
+		args.push_back(Type::getInt32Ty(getGlobalContext()));
+	}	
+	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false); //set the proper return type
+	return *FT;
+}
 
+llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
+	std::vector<llvm::Value*> paramArrayRef;
+	std::list<Value*> paramList = getParamList();
+	std::list<Value*>::iterator paramIter = paramList.begin();
+	unsigned int i = 0;
+	for(; paramIter != paramList.end(); ++paramIter, ++i)
+		paramArrayRef.push_back((*paramIter)->genLLVM(g));
+
+	llvm::FunctionType *FT = &getFunctionType(getFunction());
+	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getFunction().getName(), FT));
+	
+	return g->getBuilder().CreateCall(F, paramArrayRef.begin(), paramArrayRef.end(), "");
 }
 
 llvm::Value* Assignment::genLLVM(GenLLVM* g){
@@ -45,24 +68,19 @@ llvm::Value* Assignment::genLLVM(GenLLVM* g){
 }
 
 llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
-
+	if(getReturnValue() != NULL)
+		return g->getBuilder().CreateRet(getReturnValue()->genLLVM(g));
+	return g->getBuilder().CreateRetVoid();
 }
 
-llvm::Value* ::ExpressionStatement::genLLVM(GenLLVM*){
+llvm::Value* ExpressionStatement::genLLVM(GenLLVM*){
 
 }
 
 llvm::Value* Function::genLLVM(GenLLVM* g){
 
-	std::vector<const Type*> args;
-	FunctionProtoType& fp = getProtoType();
-	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
-	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
-		args.push_back(Type::getInt32Ty(getGlobalContext()));
-	}
-	
-	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false); //set the proper return type
-	llvm::Function *F = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, getName(), &g->getModule());
+	llvm::FunctionType *FT = &getFunctionType(*this);
+	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getName(), FT));
 
 	BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
 	g->getBuilder().SetInsertPoint(BB);
