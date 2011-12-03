@@ -7,7 +7,7 @@ LDFLAGS = `llvm-config --ldflags $(LLVM_MODULES)`
 LIBS = `llvm-config --libs $(LLVM_MODULES)`
 
 all: lexer parser main
-	$(CC) obj/*.o -lfl -o Icarus
+	$(CC) obj/*.o $(LDFLAGS) $(LIBS) -lfl -o Icarus
 parser:
 	yacc -d parser.y -o y.tab.cc && $(CC) -c y.tab.cc -o parser.o && rm y.tab.cc
 lexer: parser
@@ -17,7 +17,7 @@ main:
 #debug
 
 debug: lexerd parserd maind
-	$(CC) obj/*.o -lfl -o IcarusD
+	$(CC) obj/*.o $(LDFLAGS) $(LIBS) -lfl -o IcarusD
 maind: 
 	find -name '*.cpp' -print0 | xargs -0 $(CC) -g -c $(CPPFLAGS) && mkdir -p obj && mv *.o ./obj/
 parserd:
