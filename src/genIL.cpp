@@ -34,8 +34,13 @@ Value* BinopExpression::genIL(GenIL* g){
 	return new BinopExpression(*lVal, *rVal, getOperation());
 }
 
-Value* FunctionCall::genIL(GenIL*){
-
+Value* FunctionCall::genIL(GenIL* g){
+	std::list<Value*> newParams;
+	std::list<Value*>& oldParams = getParamList();
+	std::list<Value*>::iterator paramIter = oldParams.begin();
+	for(; paramIter != oldParams.end(); ++paramIter)
+		newParams.push_back((*paramIter)->genIL(g));
+	return new FunctionCall(getFunction(), newParams);
 }
 
 Value* Assignment::genIL(GenIL* g){
