@@ -26,4 +26,4 @@ lexerd: parserd
 	flex -+ lexer.l && $(CC) -g -c $(CPPFLAGS) lex.yy.cc -o lexer.o
 #clean
 clean:
-	rm -rf obj y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD *.dot
+	rm -rf obj y.tab.cc y.tab.hh lex.yy.cc Icarus IcarusD *.dot temp.* a.out
