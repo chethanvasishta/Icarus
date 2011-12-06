@@ -60,8 +60,10 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 	std::vector<llvm::Value*> paramArrayRef;
 	std::list<Value*> paramList = getParamList();
 	std::list<Value*>::iterator paramIter = paramList.begin();	
-	for(; paramIter != paramList.end(); ++paramIter)
-		paramArrayRef.push_back((*paramIter)->genLLVM(g));
+	for(; paramIter != paramList.end(); ++paramIter){
+		llvm::Value* param = g->getBuilder().CreateLoad((*paramIter)->genLLVM(g),"");
+		paramArrayRef.push_back(param);
+	}
 
 	llvm::FunctionType *FT = &getFunctionType(getFunction());
 	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getFunction().getName(), FT));

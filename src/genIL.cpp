@@ -54,8 +54,8 @@ Value* ReturnStatement::genIL(GenIL* g){
 	return new ReturnStatement(NULL);
 }
 
-Value* ExpressionStatement::genIL(GenIL*){
-
+Value* ExpressionStatement::genIL(GenIL* g){
+	return new ExpressionStatement(*((Expression*)getExpression().genIL(g)));
 }
 
 Value* Function::genIL(GenIL* g){
