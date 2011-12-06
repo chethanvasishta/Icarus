@@ -52,7 +52,7 @@ llvm::FunctionType& getFunctionType(Function& f){
 	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
 		args.push_back(Type::getInt32Ty(getGlobalContext()));
 	}	
-	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getDoubleTy(getGlobalContext()), args, false); //set the proper return type
+	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getInt32Ty(getGlobalContext()), args, false); //set the proper return type
 	return *FT;
 }
 
@@ -74,8 +74,9 @@ llvm::Value* Assignment::genLLVM(GenLLVM* g){
 }
 
 llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
-	if(getReturnValue() != NULL)
-		return g->getBuilder().CreateRet(getReturnValue()->genLLVM(g));
+	if(getReturnValue() != NULL){		
+		return g->getBuilder().CreateRet(g->getBuilder().CreateLoad(getReturnValue()->genLLVM(g),""));
+	}
 	return g->getBuilder().CreateRetVoid();
 }
 
