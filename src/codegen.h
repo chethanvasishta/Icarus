@@ -52,12 +52,20 @@ Constant should have a datatype and a value
 */
 class Constant: public Expression {
 public:
+
+	Constant(int value):m_value(value){}
+	
 	virtual void accept(IClassVisitor &){}
 	virtual CompEA* codegen();
 
 	virtual Value* genIL(GenIL*);
-	virtual llvm::Value* genLLVM(GenLLVM*);	
+	virtual llvm::Value* genLLVM(GenLLVM*);
+	
+	int getValue(){ return m_value; }
+	
 private:
+	int m_value; //int for now. We need to change it 
+	Constant();
 };
 
 class Variable: public Expression {

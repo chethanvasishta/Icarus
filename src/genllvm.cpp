@@ -11,23 +11,21 @@ inline llvm::LLVMContext& getGlobalContext(){ //just a double dispatch
 	return llvm::getGlobalContext();
 }
 
-llvm::Value* Constant::genLLVM(GenLLVM*){
-
+llvm::Value* Constant::genLLVM(GenLLVM* g){
+	return g->getBuilder().getInt32(getValue());
 }
 
 llvm::Value* Variable::genLLVM(GenLLVM* g){
 	//const llvm::Function* curFunc = g->getBuilder().GetInsertPoint()->getParent();
-	return g->getNamedValues()[getSymbol().getName()];
+	return g->getBuilder().CreateLoad(g->getNamedValues()[getSymbol().getName()],"");
 }
 
 llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 	llvm::IRBuilder<>& builder = g->getBuilder();
-	llvm::Value* leftValue = getLeftValue().genLLVM(g);
-	leftValue = g->getBuilder().CreateLoad(leftValue,"");
 	
+	llvm::Value* leftValue = getLeftValue().genLLVM(g);	
 	llvm::Value* rightValue = getRightValue().genLLVM(g);
-	rightValue = g->getBuilder().CreateLoad(rightValue, "");
-	
+		
 	switch(getOperation()){
 		case Add:
 			return builder.CreateAdd(leftValue, rightValue, "");
@@ -61,8 +59,9 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 	std::list<Value*> paramList = getParamList();
 	std::list<Value*>::iterator paramIter = paramList.begin();	
 	for(; paramIter != paramList.end(); ++paramIter){
-		llvm::Value* param = g->getBuilder().CreateLoad((*paramIter)->genLLVM(g),"");
-		paramArrayRef.push_back(param);
+		//llvm::Value* param = g->getBuilder().CreateLoad((*paramIter)->genLLVM(g),"");
+		//paramArrayRef.push_back(param);
+		paramArrayRef.push_back((*paramIter)->genLLVM(g));
 	}
 
 	llvm::FunctionType *FT = &getFunctionType(getFunction());
@@ -72,18 +71,19 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 }
 
 llvm::Value* Assignment::genLLVM(GenLLVM* g){
-	return g->getBuilder().CreateStore(getRVal().genLLVM(g),getLVal().genLLVM(g), false);
+	return g->getBuilder().CreateStore(getRVal().genLLVM(g),g->getNamedValues()[getLVal().getSymbol().getName()], false);
 }
 
 llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
 	if(getReturnValue() != NULL){		
-		return g->getBuilder().CreateRet(g->getBuilder().CreateLoad(getReturnValue()->genLLVM(g),""));
+		//return g->getBuilder().CreateRet(g->getBuilder().CreateLoad(getReturnValue()->genLLVM(g),""));
+		return g->getBuilder().CreateRet(getReturnValue()->genLLVM(g));//,"");
 	}
 	return g->getBuilder().CreateRetVoid();
 }
 
-llvm::Value* ExpressionStatement::genLLVM(GenLLVM*){
-
+llvm::Value* ExpressionStatement::genLLVM(GenLLVM* g){
+	return getExpression().genLLVM(g);
 }
 
 llvm::Value* Function::genLLVM(GenLLVM* g){

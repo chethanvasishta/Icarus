@@ -147,7 +147,7 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 	| RETURN { $$ = new ReturnStatement(NULL);};
 	; 
 
-expression: NUMBER { $$ = new Constant(); }
+expression: NUMBER { $$ = new Constant($1); }
 	| IDENTIFIER {
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)			

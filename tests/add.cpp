@@ -13,6 +13,7 @@ int printf(int c){
 int main(int a, int b){
 	int c;
 	c = add(b, a);
-	//c = printf(c);
+	c = printf(c);
+	c = a;
 	return c;
 }

@@ -3,7 +3,7 @@
 #include <string>
 
 Value* Constant::genIL(GenIL*){
-
+	return new Constant(getValue());
 }
 
 Value* Variable::genIL(GenIL* g){
