@@ -15,6 +15,10 @@
 
 "return" { return RETURN; }
 
+"if" { return IF; }
+
+"else" { return ELSE; }
+
 "//".*\n ;
 
 [-+*/;=,)(\{\}] { return *yytext; }

@@ -46,7 +46,7 @@ yyFlexLexer lexer; //this is our lexer
 %left  '*' '/'
 %nonassoc '(' ')'
 
-%token<integer> INTEGER NUMBER FLOAT VOID RETURN
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE
 %token<string> IDENTIFIER
 
 %type<integer> datatype
@@ -120,8 +120,13 @@ statement: declaration
 	| assignment { builder.insertStatement(*$1);}
 	| expression';' { builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
+	| if_else_stmt
 	| ';' {trace2("statement ");}
 	;
+
+if_else_stmt: IF '(' statement ')' ifblock;
+
+ifblock: '{' statement_block '}' | statement;
 	
 declaration: datatype varList ';'	{ trace2("declaration ");}
 
