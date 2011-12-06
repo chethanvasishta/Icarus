@@ -30,6 +30,7 @@ static std::list<int> dataTypeList; //to store the data types of the arguments w
 static std::list<Symbol*> argNameList;
 static std::list<Value*> parameterList;
 static ASTBuilder& builder = *new ASTBuilder();
+static std::list<std::string> errorList;
 yyFlexLexer lexer; //this is our lexer
 %}
 
@@ -185,6 +186,7 @@ paramlist: expression { parameterList.push_back($1); }
 
 void yyerror(string s) {
     fprintf(stderr, "%s\n", s.c_str());
+    errorList.push_back(s);
 }
 
 int yywrap (void ) {
@@ -216,7 +218,15 @@ int yylex(void){
 Module* ParseFile(char *filename){
 	ifstream fp;
 	fp.open(filename, ios::in);
+	if(!fp.is_open()){
+		fprintf(stderr, "Oops! Couldn't open file %s\n!", filename);
+		return NULL;
+	}
 	lexer.yyrestart(&fp);
 	yyparse();
+	if(errorList.size() != 0){
+		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);
+		return NULL;
+	}
 	return &builder.getModule();	
 }

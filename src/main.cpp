@@ -32,6 +32,8 @@ int Compile(char *fileName){
 	std::cout<<"Compiling "<<fileName<<endl; 
 #endif	
 	module = ParseFile(fileName); //this function should return us the link to the module created by the parser
+	if(module == NULL)
+		return -1; //there was some syntax error. Hence we skip all other checks
 	GenIL *myILGen = new GenIL(*module);
 	module = myILGen->generateIL();
 #if DEBUG
