@@ -7,6 +7,10 @@
 #include <cstdlib>
 #include "genIL.h"
 #include "genllvm.h"
+#include <llvm/Module.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <fstream>
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 #ifndef DEBUG
@@ -19,8 +23,8 @@ Module *module;
 
 void genExecutable(){
 	int i = system("llvm-as temp.ll"); //check if llvm is installed
-	i = system("llc temp.bc");
-	i = system("g++ temp.s");//we will generate a a.out	
+	if(!i) i = system("llc temp.bc");
+	if(!i) i = system("g++ temp.s");//we will generate a a.out	
 }
 
 int Compile(char *fileName){
@@ -38,7 +42,21 @@ int Compile(char *fileName){
 	bool llvmenabled = true;
 	if(llvmenabled){
 		GenLLVM genLLVM;
-		genLLVM.generateLLVM(*module);	
+		genLLVM.generateLLVM(*module);
+		llvm::Module& llvmModule = genLLVM.getModule();
+		llvmModule.dump();
+
+		std::string moduleStr;
+		llvm::raw_string_ostream string(moduleStr);
+		fstream moduleDumpFile;
+		moduleDumpFile.open("temp.ll");
+		if(moduleDumpFile.is_open()){
+			llvmModule.print(string, NULL);
+			moduleDumpFile<<moduleStr;
+			moduleDumpFile.close();
+		}
+		genExecutable();
+
 	}else{
 		ILBuilder myILBuilder;
 		myILBuilder.buildIL(*module); //we have our temp.ll file

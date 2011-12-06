@@ -3,6 +3,7 @@
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
+#include <llvm/Instructions.h>
 
 using llvm::Type;
 using llvm::BasicBlock;
@@ -21,18 +22,24 @@ llvm::Value* Variable::genLLVM(GenLLVM* g){
 
 llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 	llvm::IRBuilder<>& builder = g->getBuilder();
+	llvm::Value* leftValue = getLeftValue().genLLVM(g);
+	leftValue = g->getBuilder().CreateLoad(leftValue,"");
+	
+	llvm::Value* rightValue = getRightValue().genLLVM(g);
+	rightValue = g->getBuilder().CreateLoad(rightValue, "");
+	
 	switch(getOperation()){
 		case Add:
-			return builder.CreateAdd(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");
+			return builder.CreateAdd(leftValue, rightValue, "");
 		 	break;
 		 case Sub:
- 			return builder.CreateSub(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");			
+ 			return builder.CreateSub(leftValue, rightValue, "");			
 		 	break;
 		 case Mul:
-			return builder.CreateMul(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");			
+			return builder.CreateMul(leftValue, rightValue, "");			
 		 	break;
 		case Div:
-			return builder.CreateSDiv(getLeftValue().genLLVM(g), getRightValue().genLLVM(g), "");
+			return builder.CreateSDiv(leftValue, rightValue, "");
 		 	break;
 	}
 }
@@ -52,9 +59,8 @@ llvm::FunctionType& getFunctionType(Function& f){
 llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 	std::vector<llvm::Value*> paramArrayRef;
 	std::list<Value*> paramList = getParamList();
-	std::list<Value*>::iterator paramIter = paramList.begin();
-	unsigned int i = 0;
-	for(; paramIter != paramList.end(); ++paramIter, ++i)
+	std::list<Value*>::iterator paramIter = paramList.begin();	
+	for(; paramIter != paramList.end(); ++paramIter)
 		paramArrayRef.push_back((*paramIter)->genLLVM(g));
 
 	llvm::FunctionType *FT = &getFunctionType(getFunction());
@@ -64,7 +70,7 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 }
 
 llvm::Value* Assignment::genLLVM(GenLLVM* g){
-	return g->getBuilder().CreateStore(getLVal().genLLVM(g), getRVal().genLLVM(g), false);
+	return g->getBuilder().CreateStore(getRVal().genLLVM(g),getLVal().genLLVM(g), false);
 }
 
 llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
@@ -92,13 +98,15 @@ llvm::Value* Function::genLLVM(GenLLVM* g){
 		argIter != F->arg_end(); ++argIter, ++symIter){
 		argIter->setName((*symIter)->getName());
 
-		//m_irBuilder.CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName()); //its creating new names, I guess we can use the ones in the function definition itself
-		g->getNamedValues()[argIter->getName()] = &(*argIter);
+		//allocate a pointer to this variable
+		llvm::AllocaInst* allocInst = g->getBuilder().CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, "");
+		g->getBuilder().CreateStore(argIter, allocInst);
+		g->getNamedValues()[argIter->getName()] = allocInst;
 	}
 
 	//assume only the local symbols are visited now
 	std::list<Symbol*>::iterator symIter = getSymbols().begin();
-	for(; symIter != getSymbols().end(); ++symIter){		
+	for(; symIter != getSymbols().end(); ++symIter){
 		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName());
 	}
 	
@@ -116,8 +124,7 @@ llvm::Value* Module::genLLVM(GenLLVM* g){
 }
 
 void GenLLVM::generateLLVM(Module &m){
-	m.genLLVM(this);
-	m_module.dump();
+	m.genLLVM(this);	
 }
 
 GenLLVM::GenLLVM() : m_module(*new llvm::Module("MyModule", getGlobalContext())), m_irBuilder(*new llvm::IRBuilder<>(getGlobalContext())) {
