@@ -251,12 +251,12 @@ private:
 
 class Function{
 public:
-	Function(const std::string& name, FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_name(name), m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()){}
+	Function(FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()){}
 	~Function();
 
 	//Getter-Setters
 
-	std::string getName() const { return m_name; }
+	std::string getName() const { return m_protoType.getName(); }
 	std::list<Statement*>& getStatements() { return m_statementList; }
 	FunctionProtoType& getProtoType() const { return m_protoType; }
 	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
@@ -274,12 +274,9 @@ public:
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
-
-	
+	virtual void accept(IClassVisitor &);	
 private:
 	std::list<Statement*> m_statementList;
-	std::string m_name;
 	FunctionProtoType& m_protoType;
 	std::list<Symbol*> m_argSymbolList;
 	SymbolTable& m_symbolTable; //we should have a table for the function locals. this will get precendence over the 
@@ -322,27 +319,6 @@ private:
 	std::list<FunctionProtoType*> m_funcProtoList;
 	SymbolTable& m_symbolTable;
 	Module();
-};
-
-class ASTBuilder{ //This will be a builder class only and won't be necessary for further optimizations in the code
-public:
-	ASTBuilder();
-
-	IcErr addSymbol(Symbol& s);
-	IcErr addFunction(Function& f);
-	IcErr insertStatement(Statement& s);
-	IcErr addProtoType(FunctionProtoType& fp);
-
-	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
-	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
-	Function* getFunction(const std::string name);
-	void clearCurrentFunctionPtr() { m_curFunction = NULL; }
-
-	Module& getModule() { return m_module; }
-private:
-	Function* m_curFunction;//can be null. this might not be valid now. See m_tempStatementList's explanation
-	Module& m_module;
-	std::list<Statement*> m_tempStatementList; //the parser would reduce the statement block and then add the function to the list. We need to a temp list to store the statements and store them to the function.
 };
 
 #endif //codegen.h
