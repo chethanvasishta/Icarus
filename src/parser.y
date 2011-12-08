@@ -6,14 +6,12 @@
 #include "codegen.h"
 #include <FlexLexer.h>
 #include <fstream>
+#include "ASTBuilder.h"
 using namespace std;
 
 int yylex(void);
 extern void yyerror(string);
-
-
 extern "C" FILE *yyin;
-static Symbol* addSymbol(char *s);
 
 //debug definitions
 static void trace(string,int);
@@ -25,12 +23,8 @@ static int debugLevel = 1;
 #define trace1(s) trace(s, 1)
 #define trace2(s) trace(s, 2)
 
-//globals
-static std::list<int> dataTypeList; //to store the data types of the arguments while constructing the argList. See if we can add it to a class, say Parser. I don't like globals
-static std::list<Symbol*> argNameList;
-static std::list<Value*> parameterList;
 static ASTBuilder& builder = *new ASTBuilder();
-static std::list<std::string> errorList;
+std::list<Value*> parameterList;
 yyFlexLexer lexer; //this is our lexer
 %}
 
@@ -67,26 +61,23 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	{ 
 		trace2("function declaration ");
 		const std::string& string = $2;
-		FunctionProtoType& fp = *new FunctionProtoType(string, dataTypeList, $1);
-		dataTypeList.clear();
-		IcErr err = builder.addProtoType(fp);
+		IcErr err = builder.addProtoType(string, $1, NULL);
 		if(err != eNoErr)
-			yyerror(errMsg[err]);
-		
+			yyerror(errMsg[err]);		
 	}
 	;
 	
 arglist: datatype IDENTIFIER 
 	{
-		dataTypeList.push_back($1);
-		Symbol *sym = addSymbol($2);
-		argNameList.push_back(sym);
+		builder.pushDataType($1);
+		Symbol *sym = builder.addSymbol($2);
+		builder.pushArgName(sym);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
-		dataTypeList.push_back($3);
-		Symbol *sym = addSymbol($4);
-		argNameList.push_back(sym);
+		builder.pushDataType($3);
+		Symbol *sym = builder.addSymbol($4);
+		builder.pushArgName(sym);
 	}
 	|
 	;
@@ -96,15 +87,10 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 	{
 		trace2("function definition ");
 		const std::string& string = $2;
-		FunctionProtoType* fp = builder.getProtoType(string, dataTypeList);
-		if(fp == NULL){
-			fp = new FunctionProtoType(string, dataTypeList, $<integer>1); //find the prototype in the module. if not found, add a new one
-			builder.addProtoType(*fp);
-		}
-		dataTypeList.clear();
-		Function& f = *new Function(string, *fp, argNameList);
-		argNameList.clear();
-		IcErr err = builder.addFunction(f);
+		FunctionProtoType* fp = builder.getProtoType(string);//use current dataTypeList
+		if(fp == NULL) //find the prototype in the module. if not found, add a new one
+			builder.addProtoType(string, $<integer>1, &fp);
+		IcErr err = builder.addFunction(*fp);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);
 	}
@@ -125,14 +111,14 @@ statement: declaration
 	| ';' {trace2("statement ");}
 	;
 
-if_else_stmt: IF '(' statement ')' ifblock;
+if_else_stmt: IF '(' expression ')' ifblock;
 
 ifblock: '{' statement_block '}' | statement;
 	
 declaration: datatype varList ';'	{ trace2("declaration ");}
 
-varList: IDENTIFIER	{ addSymbol($1); }
-	| varList',' IDENTIFIER { addSymbol($3); }
+varList: IDENTIFIER	{ builder.addSymbol($1); }
+	| varList',' IDENTIFIER { builder.addSymbol($3); }
 	;
 	
 datatype: INTEGER 	{ trace1("int "); }
@@ -186,7 +172,7 @@ paramlist: expression { parameterList.push_back($1); }
 
 void yyerror(string s) {
     fprintf(stderr, "%s\n", s.c_str());
-    errorList.push_back(s);
+    builder.pushError(s);
 }
 
 int yywrap (void ) {
@@ -194,16 +180,6 @@ int yywrap (void ) {
 }
 
 //Helper functions
-
-static Symbol* addSymbol(char *s){ // this should have more info like datatype, scope etc
-	Symbol *ourSymbol = new Symbol(*new std::string(s));
-	IcErr err = builder.addSymbol(*ourSymbol);
-	if(err)
-		yyerror(errMsg[err]);
-	return ourSymbol;
-}
-
-
 static void trace(string s, int level){
 #if DEBUG
 	if(level >= debugLevel)
@@ -224,7 +200,7 @@ Module* ParseFile(char *filename){
 	}
 	lexer.yyrestart(&fp);
 	yyparse();
-	if(errorList.size() != 0){
+	if(builder.hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);
 		return NULL;
 	}

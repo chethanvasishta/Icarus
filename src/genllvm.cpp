@@ -4,6 +4,7 @@
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Instructions.h>
+#include <llvm/ADT/ArrayRef.h>
 
 using llvm::Type;
 using llvm::BasicBlock;
@@ -44,13 +45,13 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 
 //Helper function to get a llvm function type from our function
 llvm::FunctionType& getFunctionType(Function& f){
-	std::vector<const Type*> args;
+	std::vector<Type*> args;
 	FunctionProtoType& fp = f.getProtoType();
 	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
 	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
 		args.push_back(Type::getInt32Ty(getGlobalContext()));
-	}	
-	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getInt32Ty(getGlobalContext()), args, false); //set the proper return type
+	}
+	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getInt32Ty(getGlobalContext()), *new llvm::ArrayRef<Type*>(args), false); //set the proper return type
 	return *FT;
 }
 
@@ -67,7 +68,7 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 	llvm::FunctionType *FT = &getFunctionType(getFunction());
 	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getFunction().getName(), FT));
 	
-	return g->getBuilder().CreateCall(F, paramArrayRef.begin(), paramArrayRef.end(), "");
+	return g->getBuilder().CreateCall(F, *new llvm::ArrayRef<llvm::Value*>(paramArrayRef), "");
 }
 
 llvm::Value* Assignment::genLLVM(GenLLVM* g){

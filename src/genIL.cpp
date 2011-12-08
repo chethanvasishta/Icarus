@@ -59,7 +59,7 @@ Value* ExpressionStatement::genIL(GenIL* g){
 }
 
 Value* Function::genIL(GenIL* g){
-	Function& funcRef = *(new Function(getName(), getProtoType(), getArgSymbolList()));
+	Function& funcRef = *(new Function(getProtoType(), getArgSymbolList()));
 	g->getBuilder().addFunction(funcRef);
 	std::list<Statement*>::iterator iter = getStatements().begin();
 	for(; iter != getStatements().end(); ++iter){
