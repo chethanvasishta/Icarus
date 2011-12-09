@@ -19,6 +19,10 @@
 
 "else" { return ELSE; }
 
+"while" { return WHILE; }
+
+"for" { return FOR; }
+
 "//".*\n ;
 
 [-+*/;=,)(\{\}] { return *yytext; }

@@ -21,7 +21,7 @@ debug: lexerd parserd maind
 maind: 
 	find -name '*.cpp' -print0 | xargs -0 $(CC) -g -c $(CPPFLAGS) && mkdir -p obj && mv *.o ./obj/
 parserd:
-	yacc -d parser.y -o y.tab.cc && $(CC) -g -c $(CPPFLAGS) y.tab.cc -o parser.o
+	yacc -d -v -t parser.y -o y.tab.cc && $(CC) -g -c $(CPPFLAGS) y.tab.cc -o parser.o
 lexerd: parserd
 	flex -+ lexer.l && $(CC) -g -c $(CPPFLAGS) lex.yy.cc -o lexer.o
 #clean

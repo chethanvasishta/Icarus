@@ -1,43 +1,30 @@
 #include "codegen.h"
 #include <iostream>
 
-//definitions
-//--------------Variable----------------------
-
-void Variable::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
+//----------BranchStatement-------------------------
+IcErr BranchStatement::addStatement(Statement& s){
+	
 }
 
-//--------------BinopExpression----------------
-
-void BinopExpression::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
+//----------WhileStatement--------------------------
+IcErr WhileStatement::addStatement(Statement& s){
+	if(m_currentInsertBlock == NULL){ //we are generating statements in the function
+		m_statementList.push_back(&s);
+		ControlFlowStatement* ctrlStmt = dynamic_cast<ControlFlowStatement*>(&s);
+		if(ctrlStmt != NULL)
+			m_currentInsertBlock = ctrlStmt;
+	} else
+		m_currentInsertBlock->addStatement(s);	
+	return eNoErr;
 }
 
-//------------Assignment--------------------
-
-void Assignment::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
+bool WhileStatement::endCodeBlock(){
+	if(m_currentInsertBlock == NULL)
+		return false;
+	if(!m_currentInsertBlock->endCodeBlock())
+		m_currentInsertBlock = NULL;
+	return true; //either the inner code block ended or we ended our codeblock just now.
 }
-
-//------------ReturnStatement------------------
-
-void ReturnStatement::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
-//---------ExpressionStatement-----------------
-
-void ExpressionStatement::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
-//-----------FunctionCall----------------------------
-void FunctionCall::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
-
 
 //--------------FunctionProtoType---------------
 bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
@@ -55,13 +42,25 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 	return true;
 }
 
-void FunctionProtoType::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
 //--------------Function------------------
 IcErr Function::addStatement(Statement& s){
-	m_statementList.push_back(&s);
+	if(m_currentInsertBlock == NULL){ //we are generating statements in the function
+		m_statementList.push_back(&s);
+		ControlFlowStatement* ctrlStmt = dynamic_cast<ControlFlowStatement*>(&s);
+		if(ctrlStmt != NULL)
+			m_currentInsertBlock = ctrlStmt;
+	} else
+		m_currentInsertBlock->addStatement(s);
+	
 	return eNoErr;
+}
+
+bool Function::endCodeBlock(){
+	if(m_currentInsertBlock == NULL)
+		return false;
+	if(!m_currentInsertBlock->endCodeBlock())
+		m_currentInsertBlock = NULL;
+	return true; //either the inner code block ended or we ended our codeblock just now.
 }
 
 std::ostream& operator<<(std::ostream& stream, const Function& f){
@@ -73,26 +72,12 @@ IcErr Function::addSymbol(Symbol& sym){
 	m_symbolTable.add(sym);
 }
 
-void Function::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
-//------------Symbol---------------
-
-void Symbol::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
 //--------------SymbolTable---------------
 
 IcErr SymbolTable::add(Symbol& sym){
 	//do error handling later
 	m_symbols.push_back(&sym);
 	return eNoErr;
-}
-
-void SymbolTable::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
 }
 
 //---------------Module----------------
@@ -140,10 +125,6 @@ Module::~Module(){
 	delete &m_symbolTable;
 }
 
-void Module::accept(IClassVisitor &visitor){
-	visitor.Visit(*this);
-}
-
 Function* Module::getFunction(const std::string name){
 	std::list<Function*>::const_iterator iter = m_functionList.begin();
 	for(; iter != m_functionList.end(); ++iter){
@@ -185,6 +166,9 @@ CompEA* ReturnStatement::codegen(){
 
 CompEA* ExpressionStatement::codegen(){
 
+}
+
+CompEA* BranchStatement::codegen(){
 }
 
 CompEA* Function::codegen(){

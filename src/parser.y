@@ -41,7 +41,7 @@ yyFlexLexer lexer; //this is our lexer
 %left  '*' '/'
 %nonassoc '(' ')'
 
-%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR
 %token<string> IDENTIFIER
 
 %type<integer> datatype
@@ -97,7 +97,7 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 
 	statement_block '}' 
 	{	//we should clear the m_curFunction after this, so that any global decl will not be a part of prev function's symtab
-		builder.clearCurrentFunctionPtr();	
+		builder.endCodeBlock();	
 	}
 	;
 	
@@ -105,15 +105,37 @@ statement_block: statement_block statement |  ;
 	
 statement: declaration 
 	| assignment { builder.insertStatement(*$1);}
-	| expression';' { builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));}
+	| expression';' 
+	{ 
+		trace2("expression\n");
+		builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));
+	}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
 	| if_else_stmt
-	| ';' {trace2("statement ");}
+	| while_statement { trace1("done with while loop\n"); }
+	| for_statement
+	| ';' { trace2("empty statement\n");}
 	;
 
-if_else_stmt: IF '(' expression ')' ifblock;
+if_else_stmt: IF '(' expression ')' { builder.insertStatement(*new BranchStatement()); }
+		codeblock if_tail;
 
-ifblock: '{' statement_block '}' | statement;
+if_tail: ELSE codeblock; // | ELSE IF '(' expression ')' ifblock if_tail; we ll handle else if's later
+
+while_statement: WHILE '(' expression ')' { trace2("while statement\n"); builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
+	statement { trace1("ending while loop\n"); builder.endCodeBlock(); }
+	;
+
+for_statement: FOR '(' for_init ';' for_condition ';' for_action ')' codeblock
+	;
+
+for_init: expression | ;
+for_condition: expression | ;
+for_action: expression | ;
+
+codeblock: '{' statement_block '}' { builder.endCodeBlock(); }
+	| statement { builder.endCodeBlock(); }
+	;
 	
 declaration: datatype varList ';'	{ trace2("declaration ");}
 
@@ -141,6 +163,7 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 
 expression: NUMBER { $$ = new Constant($1); }
 	| IDENTIFIER {
+		trace2("identifier");
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)			
 			yyerror("Symbol Not Defined");			
@@ -199,6 +222,9 @@ Module* ParseFile(char *filename){
 		return NULL;
 	}
 	lexer.yyrestart(&fp);
+#if DEBUG
+	yydebug = 5; //set it to 1 for text based debugging, 5 for graph based debugging
+#endif
 	yyparse();
 	if(builder.hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);
