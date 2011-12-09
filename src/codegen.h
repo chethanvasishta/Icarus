@@ -311,11 +311,14 @@ public:
 	WhileStatement(Expression& condition): m_condition(condition), m_currentInsertBlock(NULL){}
 
 	virtual CompEA* codegen(){}
-	virtual Value* genIL(GenIL*){}
-	virtual llvm::Value* genLLVM(GenLLVM*){}
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 
 	virtual IcErr addStatement(Statement& s);
 	virtual bool endCodeBlock();
+
+
+	std::list<Statement*>& getStatements() { return m_statementList; }
 	
 	//Visitors
 	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }

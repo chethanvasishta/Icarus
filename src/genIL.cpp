@@ -45,26 +45,43 @@ Value* FunctionCall::genIL(GenIL* g){
 
 Value* Assignment::genIL(GenIL* g){
 	//LVal would be a variable, we just gen code
-	return new Assignment(getLVal(), *getRVal().genIL(g));
+	Statement* stmt = new Assignment(getLVal(), *getRVal().genIL(g));
+	g->getBuilder().insertStatement(*stmt);
+	return stmt;
 }
 
 Value* ReturnStatement::genIL(GenIL* g){
+	Statement* stmt = NULL;	
 	if(getReturnValue() != NULL)
-		return new ReturnStatement(getReturnValue()->genIL(g));
-	return new ReturnStatement(NULL);
+		stmt = new ReturnStatement(getReturnValue()->genIL(g));
+	else 
+		stmt = new ReturnStatement(NULL);
+	g->getBuilder().insertStatement(*stmt);
+	return stmt;
+}
+
+Value* WhileStatement::genIL(GenIL* g){
+	Statement* stmt = new WhileStatement(*(Expression*)getCondition().genIL(g)); //TODO:this might be a problem. we might not evaluate expression everytime in the loop.
+	g->getBuilder().insertStatement(*stmt);
+	std::list<Statement*>::const_iterator iter = getStatements().begin();
+	for(; iter != getStatements().end(); ++iter)
+		(*iter)->genIL(g);
+	g->getBuilder().endCodeBlock();
+	return stmt;
 }
 
 Value* ExpressionStatement::genIL(GenIL* g){
-	return new ExpressionStatement(*((Expression*)getExpression().genIL(g)));
+	Statement* stmt = new ExpressionStatement(*((Expression*)getExpression().genIL(g)));
+	g->getBuilder().insertStatement(*stmt);
+	return stmt;
 }
 
 Value* Function::genIL(GenIL* g){
 	Function& funcRef = *(new Function(getProtoType(), getArgSymbolList()));
 	g->getBuilder().addFunction(funcRef);
-	std::list<Statement*>::iterator iter = getStatements().begin();
+	std::list<Statement*>::const_iterator iter = getStatements().begin();
 	for(; iter != getStatements().end(); ++iter){
-		Statement *stmt = (Statement*)(*iter)->genIL(g);
-		g->getBuilder().insertStatement(*stmt);
+		(*iter)->genIL(g);		
 	}
 	//we need to copy the symbols too;
 	std::list<Symbol*>::iterator symIter = getSymbols().begin();

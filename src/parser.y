@@ -111,30 +111,12 @@ statement: declaration
 		builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));
 	}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
-	| if_else_stmt
 	| while_statement { trace1("done with while loop\n"); }
-	| for_statement
 	| ';' { trace2("empty statement\n");}
 	;
 
-if_else_stmt: IF '(' expression ')' { builder.insertStatement(*new BranchStatement()); }
-		codeblock if_tail;
-
-if_tail: ELSE codeblock; // | ELSE IF '(' expression ')' ifblock if_tail; we ll handle else if's later
-
 while_statement: WHILE '(' expression ')' { trace2("while statement\n"); builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
 	statement { trace1("ending while loop\n"); builder.endCodeBlock(); }
-	;
-
-for_statement: FOR '(' for_init ';' for_condition ';' for_action ')' codeblock
-	;
-
-for_init: expression | ;
-for_condition: expression | ;
-for_action: expression | ;
-
-codeblock: '{' statement_block '}' { builder.endCodeBlock(); }
-	| statement { builder.endCodeBlock(); }
 	;
 	
 declaration: datatype varList ';'	{ trace2("declaration ");}

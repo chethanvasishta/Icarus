@@ -9,7 +9,7 @@ LIBS = `llvm-config --libs $(LLVM_MODULES)`
 all: lexer parser main
 	$(CC) obj/*.o $(LDFLAGS) $(LIBS) -lfl -o Icarus
 parser:
-	yacc -d parser.y -o y.tab.cc && $(CC) -c $(CPPFLAGS) y.tab.cc -o parser.o && rm y.tab.cc
+	yacc -d -t parser.y -o y.tab.cc && $(CC) -c $(CPPFLAGS) y.tab.cc -o parser.o && rm y.tab.cc
 lexer: parser
 	flex -+ lexer.l && $(CC) -c  $(CPPFLAGS) lex.yy.cc -o lexer.o && rm lex.yy.cc y.tab.hh
 main:

@@ -87,6 +87,49 @@ llvm::Value* ExpressionStatement::genLLVM(GenLLVM* g){
 	return getExpression().genLLVM(g);
 }
 
+llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
+
+	llvm::IRBuilder<>& builder = g->getBuilder();
+		
+	BasicBlock* curBlock = builder.GetInsertBlock();
+	llvm::Function *func = curBlock->getParent();
+	BasicBlock *whileBB = BasicBlock::Create(getGlobalContext(), "while", func);	
+	builder.CreateBr(whileBB);
+	builder.SetInsertPoint(whileBB);
+
+	llvm::Value* condition = getCondition().genLLVM(g);
+	
+	std::list<Statement*>::iterator sIter = getStatements().begin();
+	for(; sIter != getStatements().end(); ++sIter)
+		(*sIter)->genLLVM(g);
+
+
+/*
+  %1 = alloca i32, align 4
+  %x = alloca i32, align 4
+  store i32 0, i32* %1
+  store i32 5, i32* %x, align 4
+  br label %2
+
+; <label>:2                                       ; preds = %5, %0
+  %3 = load i32* %x, align 4
+  %4 = icmp ne i32 %3, 0
+  br i1 %4, label %5, label %7
+
+; <label>:5                                       ; preds = %2
+  %6 = load i32* %x, align 4
+  br label %2
+
+; <label>:7                                       ; preds = %2
+  %8 = load i32* %x, align 4
+  %9 = add nsw i32 %8, 1
+  store i32 %9, i32* %x, align 4
+  %10 = load i32* %x, align 4
+  ret i32 %10
+
+*/
+}
+
 llvm::Value* Function::genLLVM(GenLLVM* g){
 
 	llvm::FunctionType *FT = &getFunctionType(*this);
