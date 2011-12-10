@@ -11,11 +11,13 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <fstream>
+#include <unistd.h>
+#include "debug.h"
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
-#ifndef DEBUG
-#define DEBUG 1
-#endif
+static Trace& gTrace = Trace::getInstance();
+static Debug& gDebug = Debug::getInstance();
+
 using namespace std;
 
 //global variables
@@ -28,25 +30,27 @@ void genExecutable(){
 }
 
 int Compile(char *fileName){
-#if DEBUG
-	std::cout<<"Compiling "<<fileName<<endl; 
-#endif	
+
+	gTrace<<"Compiling file"<<fileName;
 	module = ParseFile(fileName); //this function should return us the link to the module created by the parser
 	if(module == NULL)
 		return -1; //there was some syntax error. Hence we skip all other checks
 	GenIL *myILGen = new GenIL(*module);
 	module = myILGen->generateIL();
-#if DEBUG
-	std::cout<<"Printing the IL"<<endl;
-	PrintVisitor p;
-	p.Visit(*module);
-#endif
+
+	gTrace<<"Printing the IL";
+	if(gDebug.isDebuggable()){
+		PrintVisitor p;
+		p.Visit(*module);
+	}
+
 	bool llvmenabled = true;
 	if(llvmenabled){
 		GenLLVM genLLVM;
 		genLLVM.generateLLVM(*module);
 		llvm::Module& llvmModule = genLLVM.getModule();
-		llvmModule.dump();
+		if(gDebug.isDebuggable())
+			llvmModule.dump();
 
 		std::string moduleStr;
 		llvm::raw_string_ostream string(moduleStr);
@@ -72,7 +76,15 @@ int main(int argc, char *argv[]){
 		std::cout<<"should input a file to compile"<<endl;
 		return 0;
 	}
-	for(int i = 1 ; i < argc ; ++i)
+	int option; //to read command line options
+	while ((option = getopt (argc, argv, "v")) != -1){
+		switch (option){
+			case 'v': gDebug.setDebug(true);
+				break;				
+		}
+	}
+	gTrace<<"Verbose on!\n";
+	for(int i = optind ; i < argc ; ++i)
 		Compile(argv[i]);	
 	return 0;
 }

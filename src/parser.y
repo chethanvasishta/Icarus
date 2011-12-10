@@ -7,21 +7,16 @@
 #include <FlexLexer.h>
 #include <fstream>
 #include "ASTBuilder.h"
+#include "debug.h"
 using namespace std;
 
 int yylex(void);
 extern void yyerror(string);
 extern "C" FILE *yyin;
 
-//debug definitions
-static void trace(string,int);
-#define DEBUG 1
-#if DEBUG
-static int debugLevel = 1;
-#endif 
 
-#define trace1(s) trace(s, 1)
-#define trace2(s) trace(s, 2)
+static Trace& gTrace = Trace::getInstance();
+static Debug& gDebug = Debug::getInstance();
 
 static ASTBuilder& builder = *new ASTBuilder();
 std::list<Value*> parameterList;
@@ -59,7 +54,7 @@ program: program statement
 
 func_decl: datatype IDENTIFIER '(' arglist ')' ';' 
 	{ 
-		trace2("function declaration ");
+		gTrace<<"function declaration\n";
 		const std::string& string = $2;
 		IcErr err = builder.addProtoType(string, $1, NULL);
 		if(err != eNoErr)
@@ -85,7 +80,7 @@ arglist: datatype IDENTIFIER
 
 func_defn: datatype IDENTIFIER '(' arglist ')' '{' 
 	{
-		trace2("function definition ");
+		gTrace<<"function definition\n";
 		const std::string& string = $2;
 		FunctionProtoType* fp = builder.getProtoType(string);//use current dataTypeList
 		if(fp == NULL) //find the prototype in the module. if not found, add a new one
@@ -107,36 +102,36 @@ statement: declaration
 	| assignment  { builder.insertStatement(*$1);}
 	| expression';' 
 	{ 
-		trace2("expression\n");
+		gTrace<<"expression\n";
 		builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));
 	}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
-	| while_statement { trace1("done with while loop\n"); }
-	| ';' { trace2("empty statement\n");}
+	| while_statement { gTrace<<"done with while loop\n"; }
+	| ';' { gTrace<<"empty statement\n";}
 	;
 
-while_statement: WHILE '(' expression ')' { trace2("while statement\n"); builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
-	codeblock { trace1("ending while loop\n"); builder.endCodeBlock(); }
+while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
+	codeblock { gTrace<<"ending while loop\n"; builder.endCodeBlock(); }
 	;
 
 codeblock: '{' statement_block '}'
 	| statement
 	;
 	
-declaration: datatype varList ';'	{ trace2("declaration ");}
+declaration: datatype varList ';'	{ gTrace<<"declaration ";}
 
 varList: IDENTIFIER	{ builder.addSymbol($1); }
 	| varList',' IDENTIFIER { builder.addSymbol($3); }
 	;
 	
-datatype: INTEGER 	{ trace1("int "); }
-	| FLOAT 	{ trace1("float "); }
-	| VOID		{ trace1("void "); }
+datatype: INTEGER 	{ gTrace<<"int "; }
+	| FLOAT 	{ gTrace<<"float "; }
+	| VOID		{ gTrace<<"void "; }
 	;
 	
 assignment: IDENTIFIER '=' expression ';'	
 	{ 
-		trace1("assignment");
+		gTrace<<"assignment";
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)
 			yyerror("Symbol Not Defined");
@@ -149,11 +144,11 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 
 expression: NUMBER { $$ = new Constant($1); }
 	| IDENTIFIER {
-		trace2("identifier");
+		gTrace<<"identifier";
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)			
 			yyerror("Symbol Not Defined");			
-		$$ = new Variable(*identifierSymbol); 
+		$$ = new Variable(*identifierSymbol);
 	}
 	| expression '+' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Add); }
 	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
@@ -165,7 +160,7 @@ expression: NUMBER { $$ = new Constant($1); }
 	
 func_call: IDENTIFIER'('paramlist')'
 	{
-		trace2("function called");
+		gTrace<<"function called";
 		Function* func = builder.getFunction($1);
 		if(func == NULL)
 			yyerror("Function not found");
@@ -186,14 +181,6 @@ void yyerror(string s) {
 
 int yywrap (void ) {
 	return 1;
-}
-
-//Helper functions
-static void trace(string s, int level){
-#if DEBUG
-	if(level >= debugLevel)
-		printf("%s",s.c_str());
-#endif
 }
 
 int yylex(void){
