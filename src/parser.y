@@ -104,7 +104,7 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 statement_block: statement_block statement |  ;
 	
 statement: declaration 
-	| assignment { builder.insertStatement(*$1);}
+	| assignment  { builder.insertStatement(*$1);}
 	| expression';' 
 	{ 
 		trace2("expression\n");
@@ -116,7 +116,11 @@ statement: declaration
 	;
 
 while_statement: WHILE '(' expression ')' { trace2("while statement\n"); builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
-	statement { trace1("ending while loop\n"); builder.endCodeBlock(); }
+	codeblock { trace1("ending while loop\n"); builder.endCodeBlock(); }
+	;
+
+codeblock: '{' statement_block '}'
+	| statement
 	;
 	
 declaration: datatype varList ';'	{ trace2("declaration ");}
