@@ -20,13 +20,22 @@ private:
 
 class Debug {
 public:
-	bool setDebug(bool isOn) { m_isDebugOn = isOn; }
+	void setDebug(bool isOn) { m_isDebugOn = isOn; }
 	bool isDebuggable() { return m_isDebugOn; }
+
+	void setTrace(bool isOn) { m_isTraceOn = isOn; }
+	bool isTraceOn() { return m_isTraceOn; } 
+
+	void setYaccTrace(bool isOn) { m_showYaccTrace = isOn; }
+	bool isYaccTraceOn() { return m_showYaccTrace; }
 	
 	static Debug& getInstance();
 private:
 	bool m_isDebugOn;
+	bool m_isTraceOn;
+	bool m_showYaccTrace;
 	static Debug* m_instance;
+	Debug();
 };
 
 #endif //DEBUG_H

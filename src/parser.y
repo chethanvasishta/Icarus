@@ -180,7 +180,7 @@ Module* ParseFile(char *filename){
 		fprintf(stderr, "Oops! Couldn't open file %s\n!", filename);
 		return NULL;
 	}
-	lexer.yyrestart(&fp);
+	lexer.yyrestart(&fp);	
 	yyparse();
 	if(builder.hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);
