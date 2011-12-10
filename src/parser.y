@@ -7,21 +7,16 @@
 #include <FlexLexer.h>
 #include <fstream>
 #include "ASTBuilder.h"
+#include "debug.h"
 using namespace std;
 
 int yylex(void);
 extern void yyerror(string);
 extern "C" FILE *yyin;
 
-//debug definitions
-static void trace(string,int);
-#define DEBUG 1
-#if DEBUG
-static int debugLevel = 1;
-#endif 
 
-#define trace1(s) trace(s, 1)
-#define trace2(s) trace(s, 2)
+static Trace& gTrace = Trace::getInstance();
+static Debug& gDebug = Debug::getInstance();
 
 static ASTBuilder& builder = *new ASTBuilder();
 std::list<Value*> parameterList;
@@ -59,7 +54,7 @@ program: program statement
 
 func_decl: datatype IDENTIFIER '(' arglist ')' ';' 
 	{ 
-		trace2("function declaration ");
+		gTrace<<"function declaration\n";
 		const std::string& string = $2;
 		IcErr err = builder.addProtoType(string, $1, NULL);
 		if(err != eNoErr)
@@ -85,7 +80,7 @@ arglist: datatype IDENTIFIER
 
 func_defn: datatype IDENTIFIER '(' arglist ')' '{' 
 	{
-		trace2("function definition ");
+		gTrace<<"function definition\n";
 		const std::string& string = $2;
 		FunctionProtoType* fp = builder.getProtoType(string);//use current dataTypeList
 		if(fp == NULL) //find the prototype in the module. if not found, add a new one
@@ -107,23 +102,23 @@ statement: declaration
 	| assignment { builder.insertStatement(*$1);}
 	| expression';' { builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
-	| ';' {trace2("statement ");}
+	| ';' { gTrace<<"statement "; }
 	;
 	
-declaration: datatype varList ';'	{ trace2("declaration ");}
+declaration: datatype varList ';'	{ gTrace<<"declaration ";}
 
 varList: IDENTIFIER	{ builder.addSymbol($1); }
 	| varList',' IDENTIFIER { builder.addSymbol($3); }
 	;
 	
-datatype: INTEGER 	{ trace1("int "); }
-	| FLOAT 	{ trace1("float "); }
-	| VOID		{ trace1("void "); }
+datatype: INTEGER 	{ gTrace<<"int "; }
+	| FLOAT 	{ gTrace<<"float "; }
+	| VOID		{ gTrace<<"void "; }
 	;
 	
 assignment: IDENTIFIER '=' expression ';'	
 	{ 
-		trace1("assignment");
+		gTrace<<"assignment";
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)
 			yyerror("Symbol Not Defined");
@@ -151,7 +146,7 @@ expression: NUMBER { $$ = new Constant($1); }
 	
 func_call: IDENTIFIER'('paramlist')'
 	{
-		trace2("function called");
+		gTrace<<"function called";
 		Function* func = builder.getFunction($1);
 		if(func == NULL)
 			yyerror("Function not found");
@@ -172,14 +167,6 @@ void yyerror(string s) {
 
 int yywrap (void ) {
 	return 1;
-}
-
-//Helper functions
-static void trace(string s, int level){
-#if DEBUG
-	if(level >= debugLevel)
-		printf("%s",s.c_str());
-#endif
 }
 
 int yylex(void){
