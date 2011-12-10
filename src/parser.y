@@ -194,10 +194,10 @@ Module* ParseFile(char *filename){
 		fprintf(stderr, "Oops! Couldn't open file %s\n!", filename);
 		return NULL;
 	}
+
 	lexer.yyrestart(&fp);
-#if DEBUG
-	yydebug = 5; //set it to 1 for text based debugging, 5 for graph based debugging
-#endif
+	if(gDebug.isYaccTraceOn())
+		yydebug = 1; //set it to 1 for text based debugging, 5 for graph based debugging
 	yyparse();
 	if(builder.hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);

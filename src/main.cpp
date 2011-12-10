@@ -73,14 +73,21 @@ int Compile(char *fileName){
 
 int main(int argc, char *argv[]){
 	if(argc < 2){
-		std::cout<<"should input a file to compile"<<endl;
+		std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
 		return 0;
 	}
 	int option; //to read command line options
-	while ((option = getopt (argc, argv, "v")) != -1){
+	while ((option = getopt (argc, argv, "dty")) != -1){
 		switch (option){
-			case 'v': gDebug.setDebug(true);
-				break;				
+			case 'd': gDebug.setDebug(true);
+				break;
+			case 't': gDebug.setTrace(true);
+				break;
+			case 'y': gDebug.setYaccTrace(true);
+				break;
+			default:
+				std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
+				return -1;
 		}
 	}
 	gTrace<<"Verbose on!\n";

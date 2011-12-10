@@ -15,10 +15,16 @@ Trace::~Trace(){
 }
 
 Trace& Trace::operator<<(std::string s){
-	if(Debug::getInstance().isDebuggable()){
-		std::cout<<s;	
+	if(Debug::getInstance().isTraceOn()){
+		std::cout<<s;
 	}
 	return *this;
+}
+
+Debug::Debug(){
+	m_isDebugOn = false;
+	m_isTraceOn = false;
+	m_showYaccTrace = false;
 }
 
 Debug& Debug::getInstance(){
