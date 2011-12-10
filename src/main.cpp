@@ -49,7 +49,8 @@ int Compile(char *fileName){
 		GenLLVM genLLVM;
 		genLLVM.generateLLVM(*module);
 		llvm::Module& llvmModule = genLLVM.getModule();
-		llvmModule.dump();
+		if(gDebug.isDebuggable())
+			llvmModule.dump();
 
 		std::string moduleStr;
 		llvm::raw_string_ostream string(moduleStr);
@@ -78,11 +79,11 @@ int main(int argc, char *argv[]){
 	int option; //to read command line options
 	while ((option = getopt (argc, argv, "v")) != -1){
 		switch (option){
-			case 'v': Debug::getInstance().setDebug(true);
+			case 'v': gDebug.setDebug(true);
 				break;				
 		}
 	}
-	Trace::getInstance()<<"Verbose on!\n";
+	gTrace<<"Verbose on!\n";
 	for(int i = optind ; i < argc ; ++i)
 		Compile(argv[i]);	
 	return 0;
