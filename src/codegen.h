@@ -1,24 +1,16 @@
 #ifndef CODEGEN_H
 #define CODEGEN_H
 
-//includes if any
 #include <list>
 #include <string>
 #include "icerr.h"
 #include "IClassVisitor.h"
 #include "CompEA.h"
-
-//C++ Macros to use non C++ standard macro usage. See DataTypes.h for more details
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS
-#endif
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS
-#endif
-
 #include <llvm/Value.h>
 #include <llvm/Module.h>
+
 using namespace std;
+
 //definitions
 /*
 Everything should be a Value
@@ -188,6 +180,15 @@ private:
 
 };
 
+class BreakStatement : public Statement {
+public:
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+	virtual CompEA* codegen(){}
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
+};
+
 class FunctionProtoType{
 public:
 	FunctionProtoType(const std::string& name, std::list<int>& typeList, int returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
@@ -288,9 +289,10 @@ private:
 
 //our if-else handler
 class BranchStatement : public ControlFlowStatement {
-
+public:
 	//an if-else will be like if (cond) do something else do something.
 	//if else-if else will be if() do something else jump to end. if(second condition) else jump to end
+	BranchStatement(Expression& condition): m_currentInsertStatement(NULL) { m_conditions.push_back(&condition); }
 
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*){}
@@ -304,6 +306,9 @@ class BranchStatement : public ControlFlowStatement {
 private:
 	std::list<Expression*> m_conditions;
 	std::list< std::list<Statement*> > m_statementListList;
+	std::list<Statement*>::iterator m_currentInsertCodeBlock;
+	Statement* m_currentInsertStatement;
+	BranchStatement();
 };
 
 class WhileStatement : public ControlFlowStatement {

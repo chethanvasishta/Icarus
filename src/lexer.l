@@ -23,6 +23,8 @@
 
 "for" { return FOR; }
 
+"break" { return BREAK; }
+
 "//".*\n ;
 
 [-+*/;=,)(\{\}] { return *yytext; }

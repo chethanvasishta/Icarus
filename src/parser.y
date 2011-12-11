@@ -36,12 +36,12 @@ yyFlexLexer lexer; //this is our lexer
 %left  '*' '/'
 %nonassoc '(' ')'
 
-%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR BREAK
 %token<string> IDENTIFIER
 
 %type<integer> datatype
 %type<value> expression func_call
-%type<statement> return_stmt assignment
+%type<statement> return_stmt assignment break_statement
 
 %start program
 
@@ -107,8 +107,19 @@ statement: declaration
 	}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
 	| while_statement { gTrace<<"done with while loop\n"; }
+	| break_statement ';' { gTrace<<"break\n"; builder.insertStatement(*$1); }
+	| if_else_statement { gTrace<<"if else"; }
 	| ';' { gTrace<<"empty statement\n";}
 	;
+
+if_else_statement: IF '(' expression ')' 
+	{
+		gTrace<<"if statement ";
+		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
+	}
+		codeblock { gTrace<<"ending if block"; builder.endCodeBlock(); }
+	;
+
 
 while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
 	codeblock { gTrace<<"ending while loop\n"; builder.endCodeBlock(); }
@@ -117,6 +128,8 @@ while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder
 codeblock: '{' statement_block '}'
 	| statement
 	;
+
+break_statement: BREAK { $$ = new BreakStatement(); }
 	
 declaration: datatype varList ';'	{ gTrace<<"declaration ";}
 
