@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <sstream>
 using namespace std;
 
 void DotWriter::writeDotFile(char* filename, Module& m){
@@ -10,7 +11,7 @@ void DotWriter::writeDotFile(char* filename, Module& m){
 		cout<<"Error writing dot file"<<endl;
 		return;
 	}
-	m_fileStream<<" graph {";
+	m_fileStream<<" digraph {"<<endl;
 	m.accept(*this);
 	m_fileStream<<" }";
 	m_fileStream.close();
@@ -67,14 +68,12 @@ void DotWriter::Visit(ExpressionStatement& e){
 	e.getExpression().accept(*this);
 }
 
-void DotWriter::Visit(Function& f){
-	m_fileStream<<"subgraph {"<<f.getName();
+void DotWriter::Visit(Function& f){	
 	std::list<Statement*> statementList = f.getStatements();
 	std::list<Statement*>::const_iterator iter = statementList.begin();
 	for(; iter != statementList.end(); ++iter){
 		(*iter)->accept(*this);
 	}
-	m_fileStream<<"}";
 }
 
 void DotWriter::Visit(SymbolTable&){
@@ -86,10 +85,18 @@ void DotWriter::Visit(Symbol& ){
 }
 
 void DotWriter::Visit(Module& m){
-	m_fileStream<<"Module: "<<m.getName()<<endl;
+	std::string moduleID = getNextName();
+	m_fileStream<<moduleID<<"[label=\"Module: "<<m.getName()<<"\"]"<<endl;
 	std::list<Function*>& funcList = m.getFunctions();
 	for(std::list<Function*>::const_iterator funcIter = funcList.begin(); funcIter != funcList.end() ; ++funcIter){
-		(*funcIter)->accept(*this);
+		std::string funcID = getNextName();
+		m_fileStream<<funcID<<"[label=\"Function: "<<(*funcIter)->getName()<<"\"]"<<endl;
+		m_fileStream<<moduleID<<"->"<<funcID<<endl;
 	}
 }
 
+std::string& DotWriter::getNextName(){
+	std::ostringstream os;
+	os << "n"<<m_nameseed++;
+	return *new std::string(os.str());
+}

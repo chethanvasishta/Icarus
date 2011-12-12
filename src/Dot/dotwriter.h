@@ -5,6 +5,7 @@
 #include <fstream>
 class DotWriter : IClassVisitor {
 public:
+	DotWriter(): m_nameseed(0){}
 	virtual void Visit(Value& );
 	virtual void Visit(Expression&);
 	virtual void Visit(Variable&);
@@ -22,5 +23,7 @@ public:
 	void writeDotFile(char *filename, Module& m);
 private:
 	ofstream m_fileStream;
+	long m_nameseed;
+	std::string& getNextName();
 };
 #endif

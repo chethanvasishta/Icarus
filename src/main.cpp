@@ -43,6 +43,10 @@ int Compile(char *fileName){
 		PrintVisitor p;
 		p.Visit(*module);
 	}
+	if(gDebug.isDotGen()){
+		DotWriter d;
+		d.writeDotFile("postgenIL.dot", *module);
+	}
 
 	bool llvmenabled = true;
 	if(llvmenabled){
@@ -73,11 +77,11 @@ int Compile(char *fileName){
 
 int main(int argc, char *argv[]){
 	if(argc < 2){
-		std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
+		std::cout<<"Usage: Icarus [-d][-t][-y][-g] files"<<endl;
 		return 0;
 	}
 	int option; //to read command line options
-	while ((option = getopt (argc, argv, "dty")) != -1){
+	while ((option = getopt (argc, argv, "dtyg")) != -1){
 		switch (option){
 			case 'd': gDebug.setDebug(true);
 				break;
@@ -85,8 +89,10 @@ int main(int argc, char *argv[]){
 				break;
 			case 'y': gDebug.setYaccTrace(true);
 				break;
+			case 'g': gDebug.setDotGen(true);
+				break;
 			default:
-				std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
+				std::cout<<"Usage: Icarus [-d][-t][-y][-g] files"<<endl;
 				return -1;
 		}
 	}
