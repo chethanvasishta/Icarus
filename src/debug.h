@@ -29,11 +29,15 @@ public:
 	void setYaccTrace(bool isOn) { m_showYaccTrace = isOn; }
 	bool isYaccTraceOn() { return m_showYaccTrace; }
 	
+	void setDotGen(bool isOn) { m_isDotGen = isOn; }
+	bool isDotGen() { return m_isDotGen; }
+	
 	static Debug& getInstance();
 private:
 	bool m_isDebugOn;
 	bool m_isTraceOn;
 	bool m_showYaccTrace;
+	bool m_isDotGen;
 	static Debug* m_instance;
 	Debug();
 };
