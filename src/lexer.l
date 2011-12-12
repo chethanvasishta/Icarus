@@ -27,6 +27,6 @@
 	return IDENTIFIER; 
 	}
 
-[ \t]+ ;
+[ \t\n]+ ;
 %%
 
