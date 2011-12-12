@@ -86,11 +86,6 @@ int Compile(char *fileName){
 
 int main(int argc, char *argv[]){
 
-	if(argc < 2){
-		std::cout<<"Usage: Icarus [-d][-t][-y][-g] files"<<endl;
-		return 0;
-	}
-
 	int option; //to read command line options
 	while ((option = getopt (argc, argv, "dtyg")) != -1){
 		switch (option){
