@@ -13,6 +13,9 @@
 #include <fstream>
 #include <unistd.h>
 #include "debug.h"
+#include "ConstantFolder.h"
+#include "PassManager.h"
+
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 static Trace& gTrace = Trace::getInstance();
@@ -43,6 +46,10 @@ int Compile(char *fileName){
 		PrintVisitor p;
 		p.Visit(*module);
 	}
+	
+	//if optimization enabled
+	PassManager passMgr;
+	passMgr.addPass(*new ConstantFolder());
 
 	bool llvmenabled = true;
 	if(llvmenabled){
