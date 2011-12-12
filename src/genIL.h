@@ -3,6 +3,7 @@
 
 //#include "IClassVisitor.h" //just for the forward references
 #include "codegen.h"
+#include "ASTBuilder.h"
 
 class GenIL {
 public:

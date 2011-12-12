@@ -5,6 +5,9 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Instructions.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/Constants.h>
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
 
 using llvm::Type;
 using llvm::BasicBlock;
@@ -85,6 +88,34 @@ llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
 
 llvm::Value* ExpressionStatement::genLLVM(GenLLVM* g){
 	return getExpression().genLLVM(g);
+}
+
+llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
+
+	llvm::IRBuilder<>& builder = g->getBuilder();
+		
+	BasicBlock* curBlock = builder.GetInsertBlock();
+	llvm::Function *func = curBlock->getParent();
+	BasicBlock *whileBB = BasicBlock::Create(getGlobalContext(), "whilecond", func);
+	BasicBlock *whileBodyBB = BasicBlock::Create(getGlobalContext(), "whileblock", func);
+	BasicBlock *postWhileBB = BasicBlock::Create(getGlobalContext(), "postwhile", func);
+	builder.CreateBr(whileBB);
+	builder.SetInsertPoint(whileBB);
+
+	llvm::Value* condition = getCondition().genLLVM(g);
+	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32, llvm::StringRef("0"), 0));
+	llvm::Value* compareInst = builder.CreateICmpEQ(condition, zeroConst, "");
+	builder.CreateCondBr(compareInst, whileBodyBB, postWhileBB);
+
+	builder.SetInsertPoint(whileBodyBB);
+	
+	std::list<Statement*>::iterator sIter = getStatements().begin();
+	for(; sIter != getStatements().end(); ++sIter)
+		(*sIter)->genLLVM(g);
+
+	builder.CreateBr(whileBB); //loop back to while condition
+
+	builder.SetInsertPoint(postWhileBB);
 }
 
 llvm::Value* Function::genLLVM(GenLLVM* g){
