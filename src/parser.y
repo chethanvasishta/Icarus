@@ -36,12 +36,12 @@ yyFlexLexer lexer; //this is our lexer
 %left  '*' '/'
 %nonassoc '(' ')'
 
-%token<integer> INTEGER NUMBER FLOAT VOID RETURN
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR BREAK
 %token<string> IDENTIFIER
 
 %type<integer> datatype
 %type<value> expression func_call
-%type<statement> return_stmt assignment
+%type<statement> return_stmt assignment break_statement
 
 %start program
 
@@ -92,18 +92,44 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 
 	statement_block '}' 
 	{	//we should clear the m_curFunction after this, so that any global decl will not be a part of prev function's symtab
-		builder.clearCurrentFunctionPtr();	
+		builder.endCodeBlock();	
 	}
 	;
 	
 statement_block: statement_block statement |  ;
 	
 statement: declaration 
-	| assignment { builder.insertStatement(*$1);}
-	| expression';' { builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));}
+	| assignment  { builder.insertStatement(*$1);}
+	| expression';' 
+	{ 
+		gTrace<<"expression\n";
+		builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));
+	}
 	| return_stmt ';'{ builder.insertStatement(*$1);}
-	| ';' { gTrace<<"statement "; }
+	| while_statement { gTrace<<"done with while loop\n"; }
+	| break_statement ';' { gTrace<<"break\n"; builder.insertStatement(*$1); }
+	| if_else_statement { gTrace<<"if else"; }
+	| ';' { gTrace<<"empty statement\n";}
 	;
+
+if_else_statement: IF '(' expression ')' 
+	{
+		gTrace<<"if statement ";
+		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
+	}
+		codeblock { gTrace<<"ending if block"; builder.endCodeBlock(); }
+	;
+
+
+while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
+	codeblock { gTrace<<"ending while loop\n"; builder.endCodeBlock(); }
+	;
+
+codeblock: '{' statement_block '}'
+	| statement
+	;
+
+break_statement: BREAK { $$ = new BreakStatement(); }
 	
 declaration: datatype varList ';'	{ gTrace<<"declaration ";}
 
@@ -131,10 +157,11 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 
 expression: NUMBER { $$ = new Constant($1); }
 	| IDENTIFIER {
+		gTrace<<"identifier";
 		Symbol *identifierSymbol = builder.getSymbol($1);
 		if(identifierSymbol == NULL)			
 			yyerror("Symbol Not Defined");			
-		$$ = new Variable(*identifierSymbol); 
+		$$ = new Variable(*identifierSymbol);
 	}
 	| expression '+' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Add); }
 	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
@@ -180,7 +207,10 @@ Module* ParseFile(char *filename){
 		fprintf(stderr, "Oops! Couldn't open file %s\n!", filename);
 		return NULL;
 	}
-	lexer.yyrestart(&fp);	
+
+	lexer.yyrestart(&fp);
+	if(gDebug.isYaccTraceOn())
+		yydebug = 1; //set it to 1 for text based debugging, 5 for graph based debugging
 	yyparse();
 	if(builder.hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);

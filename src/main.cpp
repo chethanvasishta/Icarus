@@ -85,10 +85,12 @@ int Compile(char *fileName){
 }
 
 int main(int argc, char *argv[]){
+
 	if(argc < 2){
 		std::cout<<"Usage: Icarus [-d][-t][-y][-g] files"<<endl;
 		return 0;
 	}
+
 	int option; //to read command line options
 	while ((option = getopt (argc, argv, "dtyg")) != -1){
 		switch (option){
@@ -104,6 +106,10 @@ int main(int argc, char *argv[]){
 				std::cout<<"Usage: Icarus [-d][-t][-y][-g] files"<<endl;
 				return -1;
 		}
+	}
+	if(optind == argc){
+		std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
+		return 0;
 	}
 	gTrace<<"Verbose on!\n";
 	for(int i = optind ; i < argc ; ++i)

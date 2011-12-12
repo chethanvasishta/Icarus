@@ -9,19 +9,21 @@ public:
 
 	IcErr addSymbol(Symbol& s);
 	Symbol* addSymbol(char *name);
+	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
 	
 	IcErr addFunction(Function& f);
 	IcErr addFunction(FunctionProtoType& fp);
 	
 	IcErr insertStatement(Statement& s);
+	
 	IcErr addProtoType(FunctionProtoType& fp);
 	IcErr addProtoType(const std::string& name, int returnType, FunctionProtoType **fp);
-
 	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
 	FunctionProtoType* getProtoType(const std::string name) { return getProtoType(name, m_dataTypeList); }
-	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
+	
+	
 	Function* getFunction(const std::string name);
-	void clearCurrentFunctionPtr() { m_curFunction = NULL; }
+	bool endCodeBlock() { if(!m_curFunction->endCodeBlock()) m_curFunction = NULL; }
 
 	Module& getModule() { return m_module; }
 
