@@ -7,4 +7,4 @@ int main(){
 	func(x);
 	x = y;
 	return x;
-}l
+}

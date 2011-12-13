@@ -76,6 +76,18 @@ Value* ExpressionStatement::genIL(GenIL* g){
 	return stmt;
 }
 
+Value* BranchStatement::genIL(GenIL *g){
+//	Statement* stmt = new ExpressionStatement(*((Expression*)getExpression().genIL(g)));
+//	g->getBuilder().insertStatement(*stmt);
+//	return stmt;
+}
+
+Value *BreakStatement::genIL(GenIL* g){
+	Statement* stmt = new BreakStatement();
+	g->getBuilder().insertStatement(*stmt);
+	return stmt;
+}
+
 Value* Function::genIL(GenIL* g){
 	Function& funcRef = *(new Function(getProtoType(), getArgSymbolList()));
 	g->getBuilder().addFunction(funcRef);

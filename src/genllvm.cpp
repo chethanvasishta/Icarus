@@ -118,6 +118,10 @@ llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
 	builder.SetInsertPoint(postWhileBB);
 }
 
+llvm::Value* BreakStatement::genLLVM(GenLLVM* g){
+	
+}
+
 llvm::Value* Function::genLLVM(GenLLVM* g){
 
 	llvm::FunctionType *FT = &getFunctionType(*this);

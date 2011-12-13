@@ -4,9 +4,10 @@
 //----------BranchStatement-------------------------
 IcErr BranchStatement::addStatement(Statement& s){
 	
+	
 }
 
-//----------WhileStatement--------------------------
+//---------------WhileStatement----------------
 IcErr WhileStatement::addStatement(Statement& s){
 	if(m_currentInsertBlock == NULL){ //we are generating statements in the function
 		m_statementList.push_back(&s);
@@ -18,12 +19,20 @@ IcErr WhileStatement::addStatement(Statement& s){
 	return eNoErr;
 }
 
-bool WhileStatement::endCodeBlock(){
+//---------------ControlFlowStatement----------------
+bool ControlFlowStatement::endCodeBlock(){
 	if(m_currentInsertBlock == NULL)
 		return false;
 	if(!m_currentInsertBlock->endCodeBlock())
 		m_currentInsertBlock = NULL;
 	return true; //either the inner code block ended or we ended our codeblock just now.
+}
+
+Statement* ControlFlowStatement::getCurrentStatement(){
+	if(m_currentInsertBlock == NULL)
+		return this;
+	else
+		return m_currentInsertBlock->getCurrentStatement();	
 }
 
 //--------------FunctionProtoType---------------
@@ -53,6 +62,14 @@ IcErr Function::addStatement(Statement& s){
 		m_currentInsertBlock->addStatement(s);
 	
 	return eNoErr;
+}
+
+
+Statement* Function::getCurrentStatement(){
+	if(m_currentInsertBlock == NULL)
+		return NULL;
+	else
+		return m_currentInsertBlock->getCurrentStatement();
 }
 
 bool Function::endCodeBlock(){
