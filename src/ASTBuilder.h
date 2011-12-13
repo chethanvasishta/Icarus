@@ -25,7 +25,7 @@ public:
 	
 	
 	Function* getFunction(const std::string name);
-	bool endCodeBlock() { if(!m_curFunction->endCodeBlock()) m_curFunction = NULL; }
+	bool endCodeBlock();
 
 	Module& getModule() { return m_module; }
 

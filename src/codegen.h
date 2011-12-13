@@ -241,18 +241,82 @@ private:
 
 class ControlFlowStatement : public Statement {
 public:
-	ControlFlowStatement(): m_currentInsertBlock(NULL){}
+	ControlFlowStatement(): m_currentInsertStatement(NULL){}
 	virtual IcErr addStatement(Statement& s) = 0;
 	virtual bool endCodeBlock();  //return true if it accepted the request of ending a codeblock, false if no codeblocks were found to end
 	virtual Statement* getCurrentStatement();
 protected:
-	ControlFlowStatement *m_currentInsertBlock;
+	ControlFlowStatement *m_currentInsertStatement;
+};
+
+//each branch in an ifelse
+class Branch {
+public:
+	Branch(Expression& condition): m_condition(condition){}
+	std::list<Statement*>& getStatements() { return m_statementList; }
+	IcErr addStatement(Statement& s);
+	bool endCodeBlock();
+	virtual Statement* getCurrentStatement();
+private:
+	Expression& m_condition;
+	std::list<Statement*> m_statementList;
+	ControlFlowStatement* m_currentInsertStatement;
+	Branch();	
+	
+};
+
+//our if-else handler
+class BranchStatement : public ControlFlowStatement {
+public:
+	//an if-else will be like if (cond) do something else do something.
+	//if else-if else will be if() do something else jump to end. if(second condition) else jump to end
+	
+	BranchStatement(Expression& condition);
+	
+	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*){}
+
+	virtual IcErr addStatement(Statement& s);
+	virtual IcErr addBranch(Expression& e);
+	virtual bool endCodeBlock();
+	virtual Statement* getCurrentStatement();
+
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+private:
+	std::list<Branch*> m_branches;
+	Branch* m_currentBranch;
+	BranchStatement();
+};
+
+
+
+class WhileStatement : public ControlFlowStatement {
+public:
+	WhileStatement(Expression& condition): m_condition(condition){}
+
+	virtual CompEA* codegen(){}
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);	
+
+	virtual IcErr addStatement(Statement& s);
+	std::list<Statement*>& getStatements() { return m_statementList; }
+	
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+
+	Expression& getCondition() { return m_condition; }
+private:
+	Expression& m_condition;
+	std::list<Statement*> m_statementList;	
+	WhileStatement();
 };
 
 class Function{
 public:
 	Function(FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()),
-											m_currentInsertBlock(NULL){}
+											m_currentInsertStatement(NULL){}
 	~Function();
 
 	//Getter-Setters
@@ -284,60 +348,11 @@ private:
 	FunctionProtoType& m_protoType;
 	std::list<Symbol*> m_argSymbolList;
 	SymbolTable& m_symbolTable; //we should have a table for the function locals. this will get precendence over the global one	
-	ControlFlowStatement* m_currentInsertBlock;
+	ControlFlowStatement* m_currentInsertStatement;
 
 	//prevent unintended c++ synthesis
 	Function();
 	
-};
-
-//each branch in an ifelse
-class Branch {
-public:
-	std::list<Statement*>& getStatements() { return m_statements; }
-private:
-	Expression& m_condition;
-	std::list<Statement*> m_statements;	
-};
-
-//our if-else handler
-class BranchStatement : public ControlFlowStatement {
-public:
-	//an if-else will be like if (cond) do something else do something.
-	//if else-if else will be if() do something else jump to end. if(second condition) else jump to end
-	virtual CompEA* codegen();
-	virtual Value* genIL(GenIL*);
-	virtual llvm::Value* genLLVM(GenLLVM*){}
-
-	virtual IcErr addStatement(Statement& s);
-
-	//Visitors
-	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
-private:
-	std::list<Branch*> m_branches;
-};
-
-
-
-class WhileStatement : public ControlFlowStatement {
-public:
-	WhileStatement(Expression& condition): m_condition(condition){}
-
-	virtual CompEA* codegen(){}
-	virtual Value* genIL(GenIL*);
-	virtual llvm::Value* genLLVM(GenLLVM*);	
-
-	virtual IcErr addStatement(Statement& s);
-	std::list<Statement*>& getStatements() { return m_statementList; }
-	
-	//Visitors
-	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
-
-	Expression& getCondition() { return m_condition; }
-private:
-	Expression& m_condition;
-	std::list<Statement*> m_statementList;	
-	WhileStatement();
 };
 
 class Module{

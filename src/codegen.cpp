@@ -2,37 +2,83 @@
 #include <iostream>
 
 //----------BranchStatement-------------------------
+
+BranchStatement::BranchStatement(Expression& condition){
+	addBranch(condition);
+}
+
 IcErr BranchStatement::addStatement(Statement& s){
-	
-	
+	return m_currentBranch->addStatement(s);
+}
+
+IcErr BranchStatement::addBranch(Expression& condition){
+	m_currentBranch = new Branch(condition);
+	m_branches.push_back(m_currentBranch);
+	return eNoErr;
+}
+
+bool BranchStatement::endCodeBlock(){
+	return m_currentBranch->endCodeBlock();
+}
+
+Statement* BranchStatement::getCurrentStatement(){
+	Statement* curStatement = m_currentBranch->getCurrentStatement();
+	if(curStatement == NULL)
+		return this;
+}
+
+//----------Branch----------------------------------
+IcErr Branch::addStatement(Statement& s){
+	if(m_currentInsertStatement == NULL){
+		m_statementList.push_back(&s);
+		ControlFlowStatement* ctrlStmt = dynamic_cast<ControlFlowStatement*>(&s);
+		if(ctrlStmt != NULL)
+			m_currentInsertStatement = ctrlStmt;
+	} else
+		m_currentInsertStatement->addStatement(s);	
+	return eNoErr;
+}
+
+Statement* Branch::getCurrentStatement(){
+	if(m_currentInsertStatement == NULL)
+		return NULL;
+	return m_currentInsertStatement->getCurrentStatement();	
+}
+
+bool Branch::endCodeBlock(){
+	if(m_currentInsertStatement == NULL)
+		return false;
+	if(!m_currentInsertStatement->endCodeBlock())
+		m_currentInsertStatement = NULL;
+	return true;
 }
 
 //---------------WhileStatement----------------
 IcErr WhileStatement::addStatement(Statement& s){
-	if(m_currentInsertBlock == NULL){ //we are generating statements in the function
+	if(m_currentInsertStatement == NULL){ //we are generating statements in the function
 		m_statementList.push_back(&s);
 		ControlFlowStatement* ctrlStmt = dynamic_cast<ControlFlowStatement*>(&s);
 		if(ctrlStmt != NULL)
-			m_currentInsertBlock = ctrlStmt;
+			m_currentInsertStatement = ctrlStmt;
 	} else
-		m_currentInsertBlock->addStatement(s);	
+		m_currentInsertStatement->addStatement(s);	
 	return eNoErr;
 }
 
 //---------------ControlFlowStatement----------------
 bool ControlFlowStatement::endCodeBlock(){
-	if(m_currentInsertBlock == NULL)
+	if(m_currentInsertStatement == NULL)
 		return false;
-	if(!m_currentInsertBlock->endCodeBlock())
-		m_currentInsertBlock = NULL;
+	if(!m_currentInsertStatement->endCodeBlock())
+		m_currentInsertStatement = NULL;
 	return true; //either the inner code block ended or we ended our codeblock just now.
 }
 
 Statement* ControlFlowStatement::getCurrentStatement(){
-	if(m_currentInsertBlock == NULL)
+	if(m_currentInsertStatement == NULL)
 		return this;
 	else
-		return m_currentInsertBlock->getCurrentStatement();	
+		return m_currentInsertStatement->getCurrentStatement();	
 }
 
 //--------------FunctionProtoType---------------
@@ -53,30 +99,29 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 
 //--------------Function------------------
 IcErr Function::addStatement(Statement& s){
-	if(m_currentInsertBlock == NULL){ //we are generating statements in the function
+	if(m_currentInsertStatement == NULL){ //we are generating statements in the function
 		m_statementList.push_back(&s);
 		ControlFlowStatement* ctrlStmt = dynamic_cast<ControlFlowStatement*>(&s);
 		if(ctrlStmt != NULL)
-			m_currentInsertBlock = ctrlStmt;
+			m_currentInsertStatement = ctrlStmt;
 	} else
-		m_currentInsertBlock->addStatement(s);
+		m_currentInsertStatement->addStatement(s);
 	
 	return eNoErr;
 }
 
 
 Statement* Function::getCurrentStatement(){
-	if(m_currentInsertBlock == NULL)
+	if(m_currentInsertStatement == NULL)
 		return NULL;
-	else
-		return m_currentInsertBlock->getCurrentStatement();
+	return m_currentInsertStatement->getCurrentStatement();
 }
 
 bool Function::endCodeBlock(){
-	if(m_currentInsertBlock == NULL)
+	if(m_currentInsertStatement == NULL)
 		return false;
-	if(!m_currentInsertBlock->endCodeBlock())
-		m_currentInsertBlock = NULL;
+	if(!m_currentInsertStatement->endCodeBlock())
+		m_currentInsertStatement = NULL;
 	return true; //either the inner code block ended or we ended our codeblock just now.
 }
 

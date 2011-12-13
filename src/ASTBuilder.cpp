@@ -91,3 +91,8 @@ IcErr ASTBuilder::addBranch(Expression& e){
 Statement* ASTBuilder::getCurrentStatement(){
 	return m_curFunction->getCurrentStatement();
 }
+
+bool ASTBuilder::endCodeBlock(){
+	if(!m_curFunction->endCodeBlock())
+		m_curFunction = NULL;
+}
