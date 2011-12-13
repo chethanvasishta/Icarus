@@ -35,6 +35,8 @@ yyFlexLexer lexer; //this is our lexer
 %left '+' '-'
 %left  '*' '/'
 %nonassoc '(' ')'
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR BREAK
 %token<string> IDENTIFIER
@@ -118,6 +120,14 @@ if_else_statement: IF '(' expression ')'
 		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
 	}
 		codeblock { gTrace<<"ending if block"; builder.endCodeBlock(); }
+	iftail
+	;
+
+iftail: ELSE {
+		builder.addBranch(*(Expression*)new Constant(1)); //a 'true' expression
+	}
+	codeblock
+	| %prec LOWER_THAN_ELSE //Refer http://stackoverflow.com/questions/1737460/how-to-find-shift-reduce-conflict-in-this-yacc-file
 	;
 
 
