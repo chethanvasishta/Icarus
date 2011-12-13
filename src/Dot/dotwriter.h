@@ -20,7 +20,7 @@ public:
 	virtual void Visit(SymbolTable&);	
 	virtual void Visit(Symbol& );
 	virtual void Visit(Module& );
-	void writeDotFile(char *filename, Module& m);
+	void writeDotFile(std::string& filename, Module& m);
 private:
 	ofstream m_fileStream;
 	long m_nameseed;

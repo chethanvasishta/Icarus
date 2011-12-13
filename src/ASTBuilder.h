@@ -15,6 +15,8 @@ public:
 	IcErr addFunction(FunctionProtoType& fp);
 	
 	IcErr insertStatement(Statement& s);
+	Statement* getCurrentStatement();
+	IcErr addBranch(Expression& s);
 	
 	IcErr addProtoType(FunctionProtoType& fp);
 	IcErr addProtoType(const std::string& name, int returnType, FunctionProtoType **fp);

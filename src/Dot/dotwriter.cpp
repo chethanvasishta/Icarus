@@ -5,8 +5,8 @@
 #include <sstream>
 using namespace std;
 
-void DotWriter::writeDotFile(char* filename, Module& m){
-	m_fileStream.open(filename, ios::out);
+void DotWriter::writeDotFile(std::string& filename, Module& m){
+	m_fileStream.open(filename.c_str(), ios::out);
 	if(m_fileStream.bad()){
 		cout<<"Error writing dot file"<<endl;
 		return;

@@ -115,7 +115,8 @@ statement: declaration
 if_else_statement: IF '(' expression ')' 
 	{
 		gTrace<<"if statement ";
-		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
+		builder.insertStatement(*new BranchStatement());
+		builder.addBranch(*(Expression*)$3);
 	}
 		codeblock { gTrace<<"ending if block"; builder.endCodeBlock(); }
 	;

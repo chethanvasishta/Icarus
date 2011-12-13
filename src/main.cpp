@@ -49,7 +49,8 @@ int Compile(char *fileName){
 
 	if(gDebug.isDotGen()){
 		DotWriter d;
-		d.writeDotFile("postgenIL.dot", *module);
+		std::string filename = "postgenIL.dot";
+		d.writeDotFile(filename, *module);
 	}
 		
 	//if optimization enabled

@@ -77,3 +77,17 @@ Symbol* ASTBuilder::addSymbol(char *s){ // this should have more info like datat
 //		yyerror(errMsg[err]);
 	return ourSymbol;
 }
+
+IcErr ASTBuilder::addBranch(Expression& e){
+	Statement* stmt = getCurrentStatement();
+	if(stmt != NULL){
+		BranchStatement *branchStmt = dynamic_cast<BranchStatement*>(stmt);
+		if(branchStmt == NULL)
+			throw;
+		branchStmt->addBranch(e);
+	}
+}
+
+Statement* ASTBuilder::getCurrentStatement(){
+	return m_curFunction->getCurrentStatement();
+}
