@@ -133,21 +133,26 @@ llvm::Value* BranchStatement::genLLVM(GenLLVM* g){
 
 	//Create basic blocks for each
 	unsigned int size = getBranches().size();
-	std::vector<BasicBlock*> basicBlocks(size+1);	
-	for(unsigned int i = 0 ; i < size; ++i)
-		basicBlocks[i] = BasicBlock::Create(getGlobalContext(), "ifcodeblock", func);
+	std::vector<BasicBlock*> basicBlocks(size*2+1);	
+	for(unsigned int i = 0 ; i < size*2; i+=2){
+		basicBlocks[i] = BasicBlock::Create(getGlobalContext(), "condblock", func);
+		basicBlocks[i+1] = BasicBlock::Create(getGlobalContext(), "codeblock", func);
+	}
 	BasicBlock *postIfElseBB = BasicBlock::Create(getGlobalContext(),"postif", func);
-	basicBlocks[size] = postIfElseBB;	
+	basicBlocks[size*2] = postIfElseBB;
+
+	builder.CreateBr(basicBlocks[0]); //jump to first if condition
 	
 	std::list<Branch*>::const_iterator branchIter = getBranches().begin();
 	unsigned int i = 0;
-	for(; branchIter != getBranches().end(); ++branchIter, ++i){
+	for(; branchIter != getBranches().end(); ++branchIter, i+=2){
 		Branch* branch = *branchIter;		
 
+		builder.SetInsertPoint(basicBlocks[i]);	
 		llvm::Value* condition = branch->getCondition().genLLVM(g);
 		llvm::Value* compareInst = builder.CreateICmpNE(condition, zeroConst, "");
-		builder.CreateCondBr(compareInst, basicBlocks[i], basicBlocks[i+1]);
-		builder.SetInsertPoint(basicBlocks[i]);		
+		builder.CreateCondBr(compareInst, basicBlocks[i+1], basicBlocks[i+2]);
+		builder.SetInsertPoint(basicBlocks[i+1]);
 		
 		std::list<Statement*> statements = branch->getStatements();
 		std::list<Statement*>::const_iterator stmtIter = statements.begin();
