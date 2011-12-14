@@ -77,9 +77,25 @@ Value* ExpressionStatement::genIL(GenIL* g){
 }
 
 Value* BranchStatement::genIL(GenIL *g){
-//	Statement* stmt = new ExpressionStatement(*((Expression*)getExpression().genIL(g)));
-//	g->getBuilder().insertStatement(*stmt);
-//	return stmt;
+	ASTBuilder& builder = g->getBuilder();
+	std::list<Branch*>::const_iterator branchIter = getBranches().begin();
+	bool branchStatementAdded = false;
+	BranchStatement *branchStmt = NULL;
+	for(; branchIter != getBranches().end(); ++branchIter){
+		Branch* branch = *branchIter;
+		Expression& condition = *(Expression*) branch->getCondition().genIL(g);
+		if(!branchStatementAdded){
+			branchStmt = new BranchStatement(condition);
+			builder.insertStatement(*branchStmt);
+			branchStatementAdded = true;
+		}
+		else
+			builder.addBranch(condition);
+		std::list<Statement*>::const_iterator stmtIter = branch->getStatements().begin();
+		for(; stmtIter != branch->getStatements().end(); ++stmtIter)
+			(*stmtIter)->genIL(g);
+	}
+	return branchStmt;
 }
 
 Value *BreakStatement::genIL(GenIL* g){

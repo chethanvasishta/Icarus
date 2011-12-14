@@ -257,6 +257,7 @@ public:
 	IcErr addStatement(Statement& s);
 	bool endCodeBlock();
 	virtual Statement* getCurrentStatement();
+	Expression& getCondition() { return m_condition; }
 private:
 	Expression& m_condition;
 	std::list<Statement*> m_statementList;
@@ -281,6 +282,7 @@ public:
 	virtual IcErr addBranch(Expression& e);
 	virtual bool endCodeBlock();
 	virtual Statement* getCurrentStatement();
+	std::list<Branch*>& getBranches(){ return m_branches; }
 
 	//Visitors
 	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
