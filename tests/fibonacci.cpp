@@ -1,10 +1,12 @@
 int fib(int x){
-	return x*10-11;
+	if(x)
+		return fib(x-1) + fib(x-2);
+	return 0;
 }
 
 int main(){
 	int x;
-	x = 10;
+	x = 3;
 	x = fib(x);
 	return x;
 }

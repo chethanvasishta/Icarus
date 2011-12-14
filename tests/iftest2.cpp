@@ -1,5 +1,6 @@
 int main(){
 	int x;
+	x = 1;
 	if(x)
 		x=10;
 	if(x){
@@ -8,7 +9,7 @@ int main(){
 		while(x){
 			x = x - 2;
 			if(x)
-				x = 14;
+				x = 2;
 		}
 	}
 	return x;	

@@ -103,8 +103,8 @@ llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
 	builder.SetInsertPoint(whileBB);
 
 	llvm::Value* condition = getCondition().genLLVM(g);
-	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32, llvm::StringRef("0"), 0));
-	llvm::Value* compareInst = builder.CreateICmpEQ(condition, zeroConst, "");
+	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32 /*bits*/, 0 /*value*/, false /*isSigned*/));
+	llvm::Value* compareInst = builder.CreateICmpNE(condition, zeroConst, "");
 	builder.CreateCondBr(compareInst, whileBodyBB, postWhileBB);
 
 	builder.SetInsertPoint(whileBodyBB);
@@ -114,12 +114,48 @@ llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
 		(*sIter)->genLLVM(g);
 
 	builder.CreateBr(whileBB); //loop back to while condition
-
 	builder.SetInsertPoint(postWhileBB);
 }
 
 llvm::Value* BreakStatement::genLLVM(GenLLVM* g){
 	
+}
+
+//Generation should be 
+llvm::Value* BranchStatement::genLLVM(GenLLVM* g){
+
+	llvm::IRBuilder<>& builder = g->getBuilder();	
+
+	BasicBlock* curBlock = builder.GetInsertBlock();
+	llvm::Function *func = curBlock->getParent();	
+	
+	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32 /*bits*/, 0 /*value*/, false /*isSigned*/));
+
+	//Create basic blocks for each
+	unsigned int size = getBranches().size();
+	std::vector<BasicBlock*> basicBlocks(size+1);	
+	for(unsigned int i = 0 ; i < size; ++i)
+		basicBlocks[i] = BasicBlock::Create(getGlobalContext(), "ifcodeblock", func);
+	BasicBlock *postIfElseBB = BasicBlock::Create(getGlobalContext(),"postif", func);
+	basicBlocks[size] = postIfElseBB;	
+	
+	std::list<Branch*>::const_iterator branchIter = getBranches().begin();
+	unsigned int i = 0;
+	for(; branchIter != getBranches().end(); ++branchIter, ++i){
+		Branch* branch = *branchIter;		
+
+		llvm::Value* condition = branch->getCondition().genLLVM(g);
+		llvm::Value* compareInst = builder.CreateICmpNE(condition, zeroConst, "");
+		builder.CreateCondBr(compareInst, basicBlocks[i], basicBlocks[i+1]);
+		builder.SetInsertPoint(basicBlocks[i]);		
+		
+		std::list<Statement*> statements = branch->getStatements();
+		std::list<Statement*>::const_iterator stmtIter = statements.begin();
+		for(; stmtIter != statements.end(); ++stmtIter)
+			(*stmtIter)->genLLVM(g);
+		builder.CreateBr(postIfElseBB); //Jump to end of if-else after completing this codeblock
+	}
+	builder.SetInsertPoint(postIfElseBB);
 }
 
 llvm::Value* Function::genLLVM(GenLLVM* g){

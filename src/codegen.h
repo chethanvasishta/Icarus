@@ -276,7 +276,7 @@ public:
 	
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
-	virtual llvm::Value* genLLVM(GenLLVM*){}
+	virtual llvm::Value* genLLVM(GenLLVM*);
 
 	virtual IcErr addStatement(Statement& s);
 	virtual IcErr addBranch(Expression& e);
