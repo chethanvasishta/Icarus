@@ -119,15 +119,16 @@ if_else_statement: IF '(' expression ')'
 		gTrace<<"if statement ";
 		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
 	}
-		codeblock { gTrace<<"ending if block"; builder.endCodeBlock(); }
+		codeblock { gTrace<<"ending if block";  }
 	iftail
 	;
 
 iftail: ELSE {
 		builder.addBranch(*(Expression*)new Constant(1)); //a 'true' expression
 	}
-	codeblock
+	codeblock { gTrace<<"ending else block"; builder.endCodeBlock(); }
 	| %prec LOWER_THAN_ELSE //Refer http://stackoverflow.com/questions/1737460/how-to-find-shift-reduce-conflict-in-this-yacc-file
+	 { builder.endCodeBlock(); }
 	;
 
 

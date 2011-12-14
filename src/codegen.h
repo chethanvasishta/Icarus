@@ -252,7 +252,7 @@ protected:
 //each branch in an ifelse
 class Branch {
 public:
-	Branch(Expression& condition): m_condition(condition){}
+	Branch(Expression& condition): m_condition(condition), m_currentInsertStatement(NULL){}
 	std::list<Statement*>& getStatements() { return m_statementList; }
 	IcErr addStatement(Statement& s);
 	bool endCodeBlock();
