@@ -49,6 +49,19 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 		case NE:
 			return builder.CreateICmpNE(leftValue, rightValue, "");
 			break;
+		case LT:
+			return builder.CreateICmpULT(leftValue, rightValue, "");
+			break;
+		case LTEQ:
+			return builder.CreateICmpULE(leftValue, rightValue, "");
+			break;
+		case GT:
+			return builder.CreateICmpUGT(leftValue, rightValue, "");
+			break;
+		case GTEQ:
+			return builder.CreateICmpUGE(leftValue, rightValue, "");
+			break;		
+		
 	}
 }
 
