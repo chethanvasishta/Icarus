@@ -43,6 +43,12 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 		case Div:
 			return builder.CreateSDiv(leftValue, rightValue, "");
 		 	break;
+		case EQ:
+			return builder.CreateICmpEQ(leftValue, rightValue, "");
+			break;
+		case NE:
+			return builder.CreateICmpNE(leftValue, rightValue, "");
+			break;
 	}
 }
 
@@ -102,10 +108,12 @@ llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
 	builder.CreateBr(whileBB);
 	builder.SetInsertPoint(whileBB);
 
-	llvm::Value* condition = getCondition().genLLVM(g);
+	llvm::Value* condition = getCondition().genLLVM(g);	
 	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32 /*bits*/, 0 /*value*/, false /*isSigned*/));
-	llvm::Value* compareInst = builder.CreateICmpNE(condition, zeroConst, "");
-	builder.CreateCondBr(compareInst, whileBodyBB, postWhileBB);
+	llvm::Type* conditionType = condition->getType();	
+	if(!conditionType->isIntegerTy(1)) //bool type
+		condition = builder.CreateICmpNE(condition, zeroConst, "");
+	builder.CreateCondBr(condition, whileBodyBB, postWhileBB);
 
 	builder.SetInsertPoint(whileBodyBB);
 	
@@ -150,8 +158,10 @@ llvm::Value* BranchStatement::genLLVM(GenLLVM* g){
 
 		builder.SetInsertPoint(basicBlocks[i]);	
 		llvm::Value* condition = branch->getCondition().genLLVM(g);
-		llvm::Value* compareInst = builder.CreateICmpNE(condition, zeroConst, "");
-		builder.CreateCondBr(compareInst, basicBlocks[i+1], basicBlocks[i+2]);
+		llvm::Type* conditionType = condition->getType();
+		if(!conditionType->isIntegerTy(1)) //bool type
+			condition = builder.CreateICmpNE(condition, zeroConst, "");		
+		builder.CreateCondBr(condition, basicBlocks[i+1], basicBlocks[i+2]);
 		builder.SetInsertPoint(basicBlocks[i+1]);
 		
 		std::list<Statement*> statements = branch->getStatements();

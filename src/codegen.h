@@ -81,7 +81,14 @@ public:
 		Add,
 		Sub,
 		Mul,
-		Div		
+		Div,
+		EQ,
+		NE,
+		LT,
+		GT,
+		LTEQ,
+		GTEQ
+			
 	};	
 	BinopExpression(Value& left,Value& right, BinaryOperation op): m_left(left), m_right(right), m_op(op){}
 

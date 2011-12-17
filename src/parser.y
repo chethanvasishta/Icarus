@@ -31,14 +31,15 @@ yyFlexLexer lexer; //this is our lexer
     Statement* 	statement;
 }
 
-
+%left EQUALS NEQUALS LESSTHAN LESSTHANEQ MORETHAN MORETHANEQ
 %left '+' '-'
 %left  '*' '/'
+
 %nonassoc '(' ')'
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 
-%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR BREAK
+%token<integer> INTEGER NUMBER FLOAT VOID RETURN IF ELSE WHILE FOR BREAK EQUALS NEQUALS
 %token<string> IDENTIFIER
 
 %type<integer> datatype
@@ -178,6 +179,12 @@ expression: NUMBER { $$ = new Constant($1); }
 	| expression '-' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Sub); }
 	| expression '*' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Mul); }
 	| expression '/' expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::Div); }
+	| expression EQUALS expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::EQ); }
+	| expression NEQUALS expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::NE); }
+	| expression LESSTHAN expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::LT); }
+	| expression LESSTHANEQ expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::LTEQ); }
+	| expression MORETHAN expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::GT); }
+	| expression MORETHANEQ expression { $$ = new BinopExpression(*$1, *$3, BinopExpression::GTEQ); }
 	| func_call { $$ = $1; }
 	| '('expression')' { $$ = $2; }
 	;

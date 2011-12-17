@@ -27,6 +27,18 @@
 
 "//".*\n ;
 
+"==" { return EQUALS; }
+
+"!=" { return NEQUALS; }
+
+"<" { return LESSTHAN; }
+
+"<=" { return LESSTHANEQ; }
+
+">" { return MORETHAN; }
+
+">=" { return MORETHANEQ; }
+
 [-+*/;=,)(\{\}] { return *yytext; }
 
 [0-9]+ { yylval.integer = atoi(yytext);  return NUMBER; }
