@@ -1,13 +1,11 @@
 #include "ConstantFolder.h"
+#include "debug.h"
 
-void ConstantFolder::Execute(Module& m){
-	std::list<Function*>::iterator funcIter = m.getFunctions().begin();
-	for(; funcIter != m.getFunctions().end(); ++funcIter)
-		foldConstants(**funcIter);
+static Trace& gTrace = Trace::getInstance();
+
+char ConstantFolder::ID;
+
+bool ConstantFolder::runOnFunction(llvm::Function &F){
+	gTrace<<"Constant Folding "<<F.getName();
+	return false;
 }
-
-void ConstantFolder::foldConstants(Function& f){
-		
-}
-
-

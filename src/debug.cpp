@@ -25,6 +25,8 @@ Debug::Debug(){
 	m_isDebugOn = false;
 	m_isTraceOn = false;
 	m_showYaccTrace = false;
+	m_isDotGen = false;
+	m_isCodeOptimizing = false;
 }
 
 Debug& Debug::getInstance(){

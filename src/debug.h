@@ -31,6 +31,9 @@ public:
 	
 	void setDotGen(bool isOn) { m_isDotGen = isOn; }
 	bool isDotGen() { return m_isDotGen; }
+
+	void setCodeOptimization(bool isOn) { m_isCodeOptimizing = isOn; }
+	bool isOptimizing() { return m_isCodeOptimizing; }
 	
 	static Debug& getInstance();
 private:
@@ -38,6 +41,7 @@ private:
 	bool m_isTraceOn;
 	bool m_showYaccTrace;
 	bool m_isDotGen;
+	bool m_isCodeOptimizing;
 	static Debug* m_instance;
 	Debug();
 };
