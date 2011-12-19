@@ -1,7 +1,7 @@
 #ifndef DOTWRITER_H
 #define DOTWRITER_H
-#include "../codegen.h"
-#include "../IClassVisitor.h"
+#include "codegen.h"
+#include "IClassVisitor.h"
 #include <fstream>
 class DotWriter : IClassVisitor {
 public:

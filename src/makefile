@@ -2,7 +2,7 @@ CC = g++
 
 LLVM_MODULES = core jit native
 
-CPPFLAGS = `llvm-config --cppflags $(LLVM_MODULES)`
+CPPFLAGS = `llvm-config --cppflags $(LLVM_MODULES)` -I./include
 LDFLAGS = `llvm-config --ldflags $(LLVM_MODULES)`
 LIBS = `llvm-config --libs $(LLVM_MODULES)`
 
