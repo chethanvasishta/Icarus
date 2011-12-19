@@ -1,14 +1,16 @@
 int main(){
 	int x;
+	x = 1;
 	if(x)
 		x=10;
-	else
-		x = 5;
 	if(x){
 		x = 15;
 		x = x + 5;
-	}else{
-		x = x - 10;
+		while(x){
+			x = x - 2;
+			if(x)
+				x = 2;
+		}
 	}
-	return x;
+	return x;	
 }

@@ -5,4 +5,5 @@ void main()
 	a;
 	10;
 	main();
+	return a;
 }

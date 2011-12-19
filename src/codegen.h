@@ -1,24 +1,16 @@
 #ifndef CODEGEN_H
 #define CODEGEN_H
 
-//includes if any
 #include <list>
 #include <string>
 #include "icerr.h"
 #include "IClassVisitor.h"
 #include "CompEA.h"
-
-//C++ Macros to use non C++ standard macro usage. See DataTypes.h for more details
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS
-#endif
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS
-#endif
-
 #include <llvm/Value.h>
 #include <llvm/Module.h>
+
 using namespace std;
+
 //definitions
 /*
 Everything should be a Value
@@ -55,7 +47,7 @@ public:
 
 	Constant(int value):m_value(value){}
 	
-	virtual void accept(IClassVisitor &){}
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 
 	virtual Value* genIL(GenIL*);
@@ -75,7 +67,7 @@ public:
 	//Getter-Setters
 	Symbol& getSymbol() { return m_symbol; }
 	
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -89,7 +81,14 @@ public:
 		Add,
 		Sub,
 		Mul,
-		Div		
+		Div,
+		EQ,
+		NE,
+		LT,
+		GT,
+		LTEQ,
+		GTEQ
+			
 	};	
 	BinopExpression(Value& left,Value& right, BinaryOperation op): m_left(left), m_right(right), m_op(op){}
 
@@ -99,7 +98,7 @@ public:
 	BinaryOperation getOperation() { return m_op; }
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor) { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -119,7 +118,7 @@ public:
 	std::list<Value*>& getParamList() { return m_paramList; }
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -131,7 +130,7 @@ private:
 class Statement : public Value{
 public:
 	//Visitors
-	virtual void accept(IClassVisitor &)=0;
+	virtual void accept(IClassVisitor &visitor)=0;
 	///!!! make this class abstract
 private:	
 };
@@ -144,7 +143,7 @@ public:
 	Value& getRVal() const { return m_rval; }
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -162,7 +161,7 @@ public:
 	Value* getReturnValue() { return m_value; }
 	
 	//Visitors	
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -178,7 +177,7 @@ public:
 	Expression& getExpression() { return m_expression; }
 
 	//Visitors	
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
@@ -188,15 +187,14 @@ private:
 
 };
 
-/*
-A factory to provide us objects that derive from value
-*/
-class ValueFactory{
+class BreakStatement : public Statement {
 public:
-	Value* createFunctionCall();
-	Value* createBinopExpression();
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+	virtual CompEA* codegen(){}
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
 };
-
 
 class FunctionProtoType{
 public:
@@ -211,7 +209,7 @@ public:
 	bool operator==(const FunctionProtoType& fpOther) const;
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	
 private:
 	std::string m_name;
@@ -229,7 +227,7 @@ public:
 	std::string getName() const { return m_name; }
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 private:
 	Symbol();
 	std::string m_name; //we need to add more details regarding the 
@@ -242,16 +240,92 @@ public:
 	std::list<Symbol*>& getSymbols() { return m_symbols; }	
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 
 private:
 	std::list<Symbol*> m_symbols;
 };
 
+class ControlFlowStatement : public Statement {
+public:
+	ControlFlowStatement(): m_currentInsertStatement(NULL){}
+	virtual IcErr addStatement(Statement& s) = 0;
+	virtual bool endCodeBlock();  //return true if it accepted the request of ending a codeblock, false if no codeblocks were found to end
+	virtual Statement* getCurrentStatement();
+protected:
+	ControlFlowStatement *m_currentInsertStatement;
+};
+
+//each branch in an ifelse
+class Branch {
+public:
+	Branch(Expression& condition): m_condition(condition), m_currentInsertStatement(NULL){}
+	std::list<Statement*>& getStatements() { return m_statementList; }
+	IcErr addStatement(Statement& s);
+	bool endCodeBlock();
+	virtual Statement* getCurrentStatement();
+	Expression& getCondition() { return m_condition; }
+private:
+	Expression& m_condition;
+	std::list<Statement*> m_statementList;
+	ControlFlowStatement* m_currentInsertStatement;
+	Branch();	
+	
+};
+
+//our if-else handler
+class BranchStatement : public ControlFlowStatement {
+public:
+	//an if-else will be like if (cond) do something else do something.
+	//if else-if else will be if() do something else jump to end. if(second condition) else jump to end
+	
+	BranchStatement(Expression& condition);
+	
+	virtual CompEA* codegen();
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);
+
+	virtual IcErr addStatement(Statement& s);
+	virtual IcErr addBranch(Expression& e);
+	virtual bool endCodeBlock();
+	virtual Statement* getCurrentStatement();
+	std::list<Branch*>& getBranches(){ return m_branches; }
+
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+private:
+	std::list<Branch*> m_branches;
+	Branch* m_currentBranch;
+	BranchStatement();
+};
+
+
+
+class WhileStatement : public ControlFlowStatement {
+public:
+	WhileStatement(Expression& condition): m_condition(condition){}
+
+	virtual CompEA* codegen(){}
+	virtual Value* genIL(GenIL*);
+	virtual llvm::Value* genLLVM(GenLLVM*);	
+
+	virtual IcErr addStatement(Statement& s);
+	std::list<Statement*>& getStatements() { return m_statementList; }
+	
+	//Visitors
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
+
+	Expression& getCondition() { return m_condition; }
+private:
+	Expression& m_condition;
+	std::list<Statement*> m_statementList;	
+	WhileStatement();
+};
 
 class Function{
 public:
-	Function(FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()){}
+	Function(FunctionProtoType& protoType, std::list<Symbol*>& argSymbolList): m_protoType(protoType), m_argSymbolList(argSymbolList), m_symbolTable(*new SymbolTable()),
+											m_currentInsertStatement(NULL){}
 	~Function();
 
 	//Getter-Setters
@@ -262,9 +336,12 @@ public:
 	std::list<Symbol*>& getArgSymbolList() { return m_argSymbolList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
 	SymbolTable& getSymbolTable() { return m_symbolTable; }
+	Statement* getCurrentStatement();
 
 	IcErr addStatement(Statement& s);
 	IcErr addSymbol(Symbol& sym);
+
+	bool endCodeBlock();
 
 	virtual CompEA* codegen();
 	virtual Value* genIL(GenIL*);
@@ -274,12 +351,13 @@ public:
 	friend std::ostream& operator<<(std::ostream& stream, const Function& f);
 
 	//Visitors
-	virtual void accept(IClassVisitor &);	
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }	
 private:
 	std::list<Statement*> m_statementList;
 	FunctionProtoType& m_protoType;
 	std::list<Symbol*> m_argSymbolList;
-	SymbolTable& m_symbolTable; //we should have a table for the function locals. this will get precendence over the 
+	SymbolTable& m_symbolTable; //we should have a table for the function locals. this will get precendence over the global one	
+	ControlFlowStatement* m_currentInsertStatement;
 
 	//prevent unintended c++ synthesis
 	Function();
@@ -311,7 +389,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& stream, const Module& m);
 
 	//Visitors
-	virtual void accept(IClassVisitor &);
+	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 	
 private:
 	std::string m_name;

@@ -13,6 +13,9 @@
 #include <fstream>
 #include <unistd.h>
 #include "debug.h"
+#include "ConstantFolder.h"
+#include <llvm/PassManager.h>
+
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
 static Trace& gTrace = Trace::getInstance();
@@ -44,11 +47,28 @@ int Compile(char *fileName){
 		p.Visit(*module);
 	}
 
+	if(gDebug.isDotGen()){
+		DotWriter d;
+		std::string filename = "postgenIL.dot";
+		d.writeDotFile(filename, *module);
+	}
+		
+	//if optimization enabled
+	//PassManager passMgr;
+	//passMgr.addPass(*new ConstantFolder());	
+	
 	bool llvmenabled = true;
 	if(llvmenabled){
 		GenLLVM genLLVM;
 		genLLVM.generateLLVM(*module);
 		llvm::Module& llvmModule = genLLVM.getModule();
+
+		if(gDebug.isOptimizing()){
+			llvm::PassManager passMgr;
+			passMgr.add(new ConstantFolder());
+			passMgr.run(llvmModule);
+		}
+		
 		if(gDebug.isDebuggable())
 			llvmModule.dump();
 
@@ -72,12 +92,9 @@ int Compile(char *fileName){
 }
 
 int main(int argc, char *argv[]){
-	if(argc < 2){
-		std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
-		return 0;
-	}
+
 	int option; //to read command line options
-	while ((option = getopt (argc, argv, "dty")) != -1){
+	while ((option = getopt (argc, argv, "dtygO")) != -1){
 		switch (option){
 			case 'd': gDebug.setDebug(true);
 				break;
@@ -85,10 +102,18 @@ int main(int argc, char *argv[]){
 				break;
 			case 'y': gDebug.setYaccTrace(true);
 				break;
+			case 'g': gDebug.setDotGen(true);
+				break;
+			case 'O': gDebug.setCodeOptimization(true); //we need to allow setting levels
+				break;
 			default:
-				std::cout<<"Usage: Icarus [-d][-t][-y] files"<<endl;
+				std::cout<<"Usage: Icarus [-d][-t][-y][-g][-O] files"<<endl;
 				return -1;
 		}
+	}
+	if(optind == argc){
+		std::cout<<"Usage: Icarus [-d][-t][-y][-g][-O] files"<<endl;
+		return 0;
 	}
 	gTrace<<"Verbose on!\n";
 	for(int i = optind ; i < argc ; ++i)

@@ -5,6 +5,9 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Instructions.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/Constants.h>
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
 
 using llvm::Type;
 using llvm::BasicBlock;
@@ -40,6 +43,25 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 		case Div:
 			return builder.CreateSDiv(leftValue, rightValue, "");
 		 	break;
+		case EQ:
+			return builder.CreateICmpEQ(leftValue, rightValue, "");
+			break;
+		case NE:
+			return builder.CreateICmpNE(leftValue, rightValue, "");
+			break;
+		case LT:
+			return builder.CreateICmpULT(leftValue, rightValue, "");
+			break;
+		case LTEQ:
+			return builder.CreateICmpULE(leftValue, rightValue, "");
+			break;
+		case GT:
+			return builder.CreateICmpUGT(leftValue, rightValue, "");
+			break;
+		case GTEQ:
+			return builder.CreateICmpUGE(leftValue, rightValue, "");
+			break;		
+		
 	}
 }
 
@@ -85,6 +107,83 @@ llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
 
 llvm::Value* ExpressionStatement::genLLVM(GenLLVM* g){
 	return getExpression().genLLVM(g);
+}
+
+llvm::Value* WhileStatement::genLLVM(GenLLVM *g){
+
+	llvm::IRBuilder<>& builder = g->getBuilder();
+		
+	BasicBlock* curBlock = builder.GetInsertBlock();
+	llvm::Function *func = curBlock->getParent();
+	BasicBlock *whileBB = BasicBlock::Create(getGlobalContext(), "whilecond", func);
+	BasicBlock *whileBodyBB = BasicBlock::Create(getGlobalContext(), "whileblock", func);
+	BasicBlock *postWhileBB = BasicBlock::Create(getGlobalContext(), "postwhile", func);
+	builder.CreateBr(whileBB);
+	builder.SetInsertPoint(whileBB);
+
+	llvm::Value* condition = getCondition().genLLVM(g);	
+	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32 /*bits*/, 0 /*value*/, false /*isSigned*/));
+	llvm::Type* conditionType = condition->getType();	
+	if(!conditionType->isIntegerTy(1)) //bool type
+		condition = builder.CreateICmpNE(condition, zeroConst, "");
+	builder.CreateCondBr(condition, whileBodyBB, postWhileBB);
+
+	builder.SetInsertPoint(whileBodyBB);
+	
+	std::list<Statement*>::iterator sIter = getStatements().begin();
+	for(; sIter != getStatements().end(); ++sIter)
+		(*sIter)->genLLVM(g);
+
+	builder.CreateBr(whileBB); //loop back to while condition
+	builder.SetInsertPoint(postWhileBB);
+}
+
+llvm::Value* BreakStatement::genLLVM(GenLLVM* g){
+	
+}
+
+//Generation should be 
+llvm::Value* BranchStatement::genLLVM(GenLLVM* g){
+
+	llvm::IRBuilder<>& builder = g->getBuilder();	
+
+	BasicBlock* curBlock = builder.GetInsertBlock();
+	llvm::Function *func = curBlock->getParent();	
+	
+	llvm::Value* zeroConst = llvm::ConstantInt::get(getGlobalContext(), llvm::APInt(32 /*bits*/, 0 /*value*/, false /*isSigned*/));
+
+	//Create basic blocks for each
+	unsigned int size = getBranches().size();
+	std::vector<BasicBlock*> basicBlocks(size*2+1);	
+	for(unsigned int i = 0 ; i < size*2; i+=2){
+		basicBlocks[i] = BasicBlock::Create(getGlobalContext(), "condblock", func);
+		basicBlocks[i+1] = BasicBlock::Create(getGlobalContext(), "codeblock", func);
+	}
+	BasicBlock *postIfElseBB = BasicBlock::Create(getGlobalContext(),"postif", func);
+	basicBlocks[size*2] = postIfElseBB;
+
+	builder.CreateBr(basicBlocks[0]); //jump to first if condition
+	
+	std::list<Branch*>::const_iterator branchIter = getBranches().begin();
+	unsigned int i = 0;
+	for(; branchIter != getBranches().end(); ++branchIter, i+=2){
+		Branch* branch = *branchIter;		
+
+		builder.SetInsertPoint(basicBlocks[i]);	
+		llvm::Value* condition = branch->getCondition().genLLVM(g);
+		llvm::Type* conditionType = condition->getType();
+		if(!conditionType->isIntegerTy(1)) //bool type
+			condition = builder.CreateICmpNE(condition, zeroConst, "");		
+		builder.CreateCondBr(condition, basicBlocks[i+1], basicBlocks[i+2]);
+		builder.SetInsertPoint(basicBlocks[i+1]);
+		
+		std::list<Statement*> statements = branch->getStatements();
+		std::list<Statement*>::const_iterator stmtIter = statements.begin();
+		for(; stmtIter != statements.end(); ++stmtIter)
+			(*stmtIter)->genLLVM(g);
+		builder.CreateBr(postIfElseBB); //Jump to end of if-else after completing this codeblock
+	}
+	builder.SetInsertPoint(postIfElseBB);
 }
 
 llvm::Value* Function::genLLVM(GenLLVM* g){

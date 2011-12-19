@@ -1,10 +1,10 @@
-void func(int a){
+int func(int a){
 	a;
-	return;
+	return a;
 }
 int main(){
 	int x, y;
 	func(x);
 	x = y;
 	return x;
-}l
+}
