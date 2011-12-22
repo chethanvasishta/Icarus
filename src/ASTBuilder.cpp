@@ -70,8 +70,8 @@ Function* ASTBuilder::getFunction(const std::string name){
 	return m_module.getFunction(name);
 }
 
-Symbol* ASTBuilder::addSymbol(char *s){ // this should have more info like datatype, scope etc
-	Symbol *ourSymbol = new Symbol(*new std::string(s));
+Symbol* ASTBuilder::addSymbol(char *s, Type& type){ // this should have more info like datatype, scope etc
+	Symbol *ourSymbol = new Symbol(*new std::string(s), type);
 	IcErr err = addSymbol(*ourSymbol);
 //	if(err)
 //		yyerror(errMsg[err]);

@@ -14,6 +14,10 @@ int yylex(void);
 extern void yyerror(string);
 extern "C" FILE *yyin;
 
+//for types
+Type& getType(int parsedType);
+int currentType = -1;
+
 
 static Trace& gTrace = Trace::getInstance();
 static Debug& gDebug = Debug::getInstance();
@@ -68,13 +72,13 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 arglist: datatype IDENTIFIER 
 	{
 		builder.pushDataType($1);
-		Symbol *sym = builder.addSymbol($2);
+		Symbol *sym = builder.addSymbol($2, getType($1));
 		builder.pushArgName(sym);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
 		builder.pushDataType($3);
-		Symbol *sym = builder.addSymbol($4);
+		Symbol *sym = builder.addSymbol($4, getType($3));
 		builder.pushArgName(sym);
 	}
 	|
@@ -143,10 +147,10 @@ codeblock: '{' statement_block '}'
 
 break_statement: BREAK { $$ = new BreakStatement(); }
 	
-declaration: datatype varList ';'	{ gTrace<<"declaration ";}
+declaration: datatype { currentType = $1; } varList ';' { gTrace<<"declaration "; currentType = -1; }
 
-varList: IDENTIFIER	{ builder.addSymbol($1); }
-	| varList',' IDENTIFIER { builder.addSymbol($3); }
+varList: IDENTIFIER	{ builder.addSymbol($1, getType(currentType)); }
+	| varList',' IDENTIFIER { builder.addSymbol($3, getType(currentType)); }
 	;
 	
 datatype: INTEGER 	{ gTrace<<"int "; }
@@ -216,6 +220,16 @@ int yywrap (void ) {
 
 int yylex(void){
 	return lexer.yylex();
+}
+
+Type& getType(int parsedType){
+	switch(parsedType){
+		case INTEGER:
+			return *new Type(Type::IntegerTy);
+			break;
+		default: yyerror("Unknown type in getType()");
+			break;
+	}
 }
 
 Module* ParseFile(char *filename){

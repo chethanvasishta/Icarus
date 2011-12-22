@@ -138,7 +138,7 @@ Variable& GenIL::getNextVariable(){
 	std::ostringstream os;
 	os << "_M_"<<m_tempSeed++;
 	std::string str = os.str();
-	Symbol* s = new Symbol(str);
+	Symbol* s = new Symbol(str, *new Type(Type::IntegerTy)); //Integer for temp
 	m_astBuilder.addSymbol(*s);
 	return *(new Variable(*s));
 }

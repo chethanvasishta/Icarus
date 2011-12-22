@@ -8,7 +8,7 @@ public:
 	ASTBuilder();
 
 	IcErr addSymbol(Symbol& s);
-	Symbol* addSymbol(char *name);
+	Symbol* addSymbol(char *name, Type& type);
 	Symbol* getSymbol(std::string name); //temporary. Need more than a name, like scope etc.
 	
 	IcErr addFunction(Function& f);

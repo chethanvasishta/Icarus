@@ -221,17 +221,19 @@ private:
 
 class Symbol{
 public:
-	Symbol(std::string& name): m_name(name){}
+	Symbol(std::string& name, Type& type): m_name(name), m_type(type){}
 	~Symbol();
 
 	//Getter-Setters
 	std::string getName() const { return m_name; }
+	Type& getType() { return m_type; }
 
 	//Visitors
 	virtual void accept(IClassVisitor &visitor)  { visitor.Visit(*this); }
 private:
 	Symbol();
-	std::string m_name; //we need to add more details regarding the 
+	std::string m_name; //we need to add more details regarding the type
+	Type m_type;
 };
 
 class SymbolTable{
