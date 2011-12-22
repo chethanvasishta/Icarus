@@ -81,8 +81,6 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 	std::list<Value*> paramList = getParamList();
 	std::list<Value*>::iterator paramIter = paramList.begin();	
 	for(; paramIter != paramList.end(); ++paramIter){
-		//llvm::Value* param = g->getBuilder().CreateLoad((*paramIter)->genLLVM(g),"");
-		//paramArrayRef.push_back(param);
 		paramArrayRef.push_back((*paramIter)->genLLVM(g));
 	}
 
@@ -97,8 +95,7 @@ llvm::Value* Assignment::genLLVM(GenLLVM* g){
 }
 
 llvm::Value* ReturnStatement::genLLVM(GenLLVM* g){
-	if(getReturnValue() != NULL){		
-		//return g->getBuilder().CreateRet(g->getBuilder().CreateLoad(getReturnValue()->genLLVM(g),""));
+	if(getReturnValue() != NULL){
 		return g->getBuilder().CreateRet(getReturnValue()->genLLVM(g));//,"");
 	}
 	return g->getBuilder().CreateRetVoid();
@@ -201,7 +198,7 @@ llvm::Value* Function::genLLVM(GenLLVM* g){
 		argIter->setName((*symIter)->getName());
 
 		//allocate a pointer to this variable
-		llvm::AllocaInst* allocInst = g->getBuilder().CreateAlloca(llvm::Type::getInt32Ty(getGlobalContext()), 0, "");
+		llvm::AllocaInst* allocInst = g->getBuilder().CreateAlloca(g->getLLVMType((*symIter)->getType()), 0, "");
 		g->getBuilder().CreateStore(argIter, allocInst);
 		g->getNamedValues()[argIter->getName()] = allocInst;
 	}
@@ -209,7 +206,7 @@ llvm::Value* Function::genLLVM(GenLLVM* g){
 	//assume only the local symbols are visited now
 	std::list<Symbol*>::iterator symIter = getSymbols().begin();
 	for(; symIter != getSymbols().end(); ++symIter){
-		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(llvm::Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName());
+		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(g->getLLVMType((*symIter)->getType()), 0, (*symIter)->getName());
 	}
 	
 	std::list<Statement*>::iterator sIter = getStatements().begin();
@@ -230,4 +227,18 @@ void GenLLVM::generateLLVM(Module &m){
 }
 
 GenLLVM::GenLLVM() : m_module(*new llvm::Module("MyModule", getGlobalContext())), m_irBuilder(*new llvm::IRBuilder<>(getGlobalContext())) {
+}
+
+//Helpers
+
+llvm::Type* GenLLVM::getLLVMType(Type& type){
+	switch(type.getTypeID()){
+		case Type::IntegerTy:
+			return llvm::Type::getInt32Ty(getGlobalContext());
+		case Type::FloatTy:
+			return llvm::Type::getFloatTy(getGlobalContext());
+		case Type::VoidTy:
+			return llvm::Type::getVoidTy(getGlobalContext());
+	
+	}
 }

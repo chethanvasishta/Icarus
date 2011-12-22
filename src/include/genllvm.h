@@ -7,6 +7,7 @@
 #include <llvm/Module.h>
 #include <map>
 #include <string>
+#include "Type.h"
 
 class GenLLVM {
 public:
@@ -15,10 +16,11 @@ public:
 	llvm::IRBuilder<>& getBuilder() { return m_irBuilder; }
 	llvm::Module& getModule() { return m_module; }
 	std::map<std::string, llvm::Value*>& getNamedValues() { return m_namedValues; }
+	llvm::Type* getLLVMType(Type& type);
 	
 private:
 	llvm::IRBuilder<>& m_irBuilder;
-	llvm::Module& m_module;
+	llvm::Module& m_module;	
 	std::map<std::string, llvm::Value*> m_namedValues; //to hold the temp allocations in the function
 };
 
