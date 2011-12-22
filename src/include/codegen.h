@@ -8,6 +8,7 @@
 #include "CompEA.h"
 #include <llvm/Value.h>
 #include <llvm/Module.h>
+#include "Type.h"
 
 using namespace std;
 

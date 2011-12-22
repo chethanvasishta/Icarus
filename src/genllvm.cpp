@@ -9,7 +9,6 @@
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
 
-using llvm::Type;
 using llvm::BasicBlock;
 inline llvm::LLVMContext& getGlobalContext(){ //just a double dispatch
 	return llvm::getGlobalContext();
@@ -67,13 +66,13 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 
 //Helper function to get a llvm function type from our function
 llvm::FunctionType& getFunctionType(Function& f){
-	std::vector<Type*> args;
+	std::vector<llvm::Type*> args;
 	FunctionProtoType& fp = f.getProtoType();
 	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
 	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
-		args.push_back(Type::getInt32Ty(getGlobalContext()));
+		args.push_back(llvm::Type::getInt32Ty(getGlobalContext()));
 	}
-	llvm::FunctionType *FT = llvm::FunctionType::get(Type::getInt32Ty(getGlobalContext()), *new llvm::ArrayRef<Type*>(args), false); //set the proper return type
+	llvm::FunctionType *FT = llvm::FunctionType::get(llvm::Type::getInt32Ty(getGlobalContext()), *new llvm::ArrayRef<llvm::Type*>(args), false); //set the proper return type
 	return *FT;
 }
 
@@ -202,7 +201,7 @@ llvm::Value* Function::genLLVM(GenLLVM* g){
 		argIter->setName((*symIter)->getName());
 
 		//allocate a pointer to this variable
-		llvm::AllocaInst* allocInst = g->getBuilder().CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, "");
+		llvm::AllocaInst* allocInst = g->getBuilder().CreateAlloca(llvm::Type::getInt32Ty(getGlobalContext()), 0, "");
 		g->getBuilder().CreateStore(argIter, allocInst);
 		g->getNamedValues()[argIter->getName()] = allocInst;
 	}
@@ -210,7 +209,7 @@ llvm::Value* Function::genLLVM(GenLLVM* g){
 	//assume only the local symbols are visited now
 	std::list<Symbol*>::iterator symIter = getSymbols().begin();
 	for(; symIter != getSymbols().end(); ++symIter){
-		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName());
+		g->getNamedValues()[(*symIter)->getName()] = g->getBuilder().CreateAlloca(llvm::Type::getInt32Ty(getGlobalContext()), 0, (*symIter)->getName());
 	}
 	
 	std::list<Statement*>::iterator sIter = getStatements().begin();
