@@ -147,15 +147,15 @@ codeblock: '{' statement_block '}'
 
 break_statement: BREAK { $$ = new BreakStatement(); }
 	
-declaration: datatype { currentType = $1; } varList ';' { gTrace<<"declaration "; currentType = -1; }
+declaration: datatype varList ';' { gTrace<<"declaration "; currentType = -1; }
 
 varList: IDENTIFIER	{ builder.addSymbol($1, getType(currentType)); }
 	| varList',' IDENTIFIER { builder.addSymbol($3, getType(currentType)); }
 	;
 	
-datatype: INTEGER 	{ gTrace<<"int "; }
-	| FLOAT 	{ gTrace<<"float "; }
-	| VOID		{ gTrace<<"void "; }
+datatype: INTEGER 	{ gTrace<<"int "; $$ = currentType = Type::IntegerTy; }
+	| FLOAT 	{ gTrace<<"float "; $$ = currentType = Type::FloatTy; }
+	| VOID		{ gTrace<<"void "; $$ = currentType = Type::VoidTy; }
 	;
 	
 assignment: IDENTIFIER '=' expression ';'	
@@ -224,8 +224,10 @@ int yylex(void){
 
 Type& getType(int parsedType){
 	switch(parsedType){
-		case INTEGER:
-			return *new Type(Type::IntegerTy);
+		case Type::IntegerTy:
+		case Type::FloatTy:
+		case Type::VoidTy:		
+			return *new Type((Type::TypeID)parsedType);
 			break;
 		default: yyerror("Unknown type in getType()");
 			break;
@@ -239,7 +241,7 @@ Module* ParseFile(char *filename){
 		fprintf(stderr, "Oops! Couldn't open file %s\n!", filename);
 		return NULL;
 	}
-
+	
 	lexer.yyrestart(&fp);
 	if(gDebug.isYaccTraceOn())
 		yydebug = 1; //set it to 1 for text based debugging, 5 for graph based debugging
