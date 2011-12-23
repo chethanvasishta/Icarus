@@ -3,7 +3,6 @@
 #include "codegen.h"
 #include "PrintVisitor.h"
 #include "./Dot/dotwriter.h"
-#include "ILBuilder.h"
 #include <cstdlib>
 #include "genIL.h"
 #include "genllvm.h"
@@ -35,17 +34,17 @@ void genExecutable(){
 int Compile(char *fileName){
 
 	gTrace<<"Compiling file"<<fileName;
-	module = ParseFile(fileName); //this function should return us the link to the module created by the parser
+	module = ParseFile(fileName);
 	if(module == NULL)
 		return -1; //there was some syntax error. Hence we skip all other checks
 	GenIL *myILGen = new GenIL(*module);
 	module = myILGen->generateIL();
 
-	gTrace<<"Printing the IL";
-	if(gDebug.isDebuggable()){
-		PrintVisitor p;
-		p.Visit(*module);
-	}
+	//gTrace<<"Printing the IL";
+	//if(gDebug.isDebuggable()){
+	//	PrintVisitor p;
+	//	p.Visit(*module);
+	//}
 
 	if(gDebug.isDotGen()){
 		DotWriter d;
@@ -57,37 +56,30 @@ int Compile(char *fileName){
 	//PassManager passMgr;
 	//passMgr.addPass(*new ConstantFolder());	
 	
-	bool llvmenabled = true;
-	if(llvmenabled){
-		GenLLVM genLLVM;
-		genLLVM.generateLLVM(*module);
-		llvm::Module& llvmModule = genLLVM.getModule();
+	GenLLVM genLLVM;
+	genLLVM.generateLLVM(*module);
+	llvm::Module& llvmModule = genLLVM.getModule();
 
-		if(gDebug.isOptimizing()){
-			llvm::PassManager passMgr;
-			passMgr.add(new ConstantFolder());
-			passMgr.run(llvmModule);
-		}
-		
-		if(gDebug.isDebuggable())
-			llvmModule.dump();
-
-		std::string moduleStr;
-		llvm::raw_string_ostream string(moduleStr);
-		fstream moduleDumpFile;
-		moduleDumpFile.open("temp.ll", fstream::in | fstream::out | fstream::trunc);
-		if(moduleDumpFile.is_open()){
-			llvmModule.print(string, NULL);
-			moduleDumpFile<<moduleStr;
-			moduleDumpFile.close();
-		}
-		genExecutable();
-
-	}else{
-		ILBuilder myILBuilder;
-		myILBuilder.buildIL(*module); //we have our temp.ll file
-		genExecutable();
+	if(gDebug.isOptimizing()){
+		llvm::PassManager passMgr;
+		passMgr.add(new ConstantFolder());
+		passMgr.run(llvmModule);
 	}
+	
+	if(gDebug.isDebuggable())
+		llvmModule.dump();
+
+	std::string moduleStr;
+	llvm::raw_string_ostream string(moduleStr);
+	fstream moduleDumpFile;
+	moduleDumpFile.open("temp.ll", fstream::in | fstream::out | fstream::trunc);
+	if(moduleDumpFile.is_open()){
+		llvmModule.print(string, NULL);
+		moduleDumpFile<<moduleStr;
+		moduleDumpFile.close();
+	}
+	genExecutable();
+	
 	return 0;
 }
 
