@@ -63,7 +63,7 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	{ 
 		gTrace<<"function declaration\n";
 		const std::string& string = $2;
-		IcErr err = builder.addProtoType(string, $1, NULL);
+		IcErr err = builder.addProtoType(string, getType($1), NULL);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);		
 	}
@@ -91,7 +91,7 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 		const std::string& string = $2;
 		FunctionProtoType* fp = builder.getProtoType(string);//use current dataTypeList
 		if(fp == NULL) //find the prototype in the module. if not found, add a new one
-			builder.addProtoType(string, $<integer>1, &fp);
+			builder.addProtoType(string, getType($1), &fp);
 		IcErr err = builder.addFunction(*fp);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);

@@ -165,7 +165,7 @@ IcErr Module::addProtoType(FunctionProtoType& fp){
 }
 
 FunctionProtoType* Module::getProtoType(const std::string name, std::list<int> dataTypes){
-	FunctionProtoType& fp = *new FunctionProtoType(name, dataTypes, 0); //no need of return type for comparing prototypes
+	FunctionProtoType& fp = *new FunctionProtoType(name, dataTypes, *new Type(Type::IntegerTy)); //no need of return type for comparing prototypes
 	std::list<FunctionProtoType*>::const_iterator protoIter = m_funcProtoList.begin();
 	for(; protoIter != m_funcProtoList.end(); ++protoIter){
 		if(**protoIter == fp)

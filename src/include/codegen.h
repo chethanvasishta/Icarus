@@ -199,12 +199,12 @@ public:
 
 class FunctionProtoType{
 public:
-	FunctionProtoType(const std::string& name, std::list<int>& typeList, int returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
+	FunctionProtoType(const std::string& name, std::list<int>& typeList, Type returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
 
 	//Getter-Setters
 	std::string getName() const { return m_name; }
 	std::list<int>& getTypeList() { return m_argTypeList; }
-	int getReturnType() { return m_returnType; }
+	Type& getReturnType() { return m_returnType; }
 
 	//overloaded operators
 	bool operator==(const FunctionProtoType& fpOther) const;
@@ -215,7 +215,7 @@ public:
 private:
 	std::string m_name;
 	std::list<int> m_argTypeList; //just store the datatypes; no need of names for the proto
-	int m_returnType;
+	Type m_returnType;
 	FunctionProtoType();
 };
 
