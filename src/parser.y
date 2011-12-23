@@ -22,7 +22,7 @@ int currentType = -1;
 static Trace& gTrace = Trace::getInstance();
 static Debug& gDebug = Debug::getInstance();
 
-static ASTBuilder& builder = *new ASTBuilder();
+static ASTBuilder* builder;
 std::list<Value*> parameterList;
 yyFlexLexer lexer; //this is our lexer
 %}
@@ -63,7 +63,7 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	{ 
 		gTrace<<"function declaration\n";
 		const std::string& string = $2;
-		IcErr err = builder.addProtoType(string, getType($1), NULL);
+		IcErr err = builder->addProtoType(string, getType($1), NULL);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);		
 	}
@@ -71,15 +71,15 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	
 arglist: datatype IDENTIFIER 
 	{
-		builder.pushDataType(&getType($1));
-		Symbol *sym = builder.addSymbol($2, getType($1));
-		builder.pushArgName(sym);
+		builder->pushDataType(&getType($1));
+		Symbol *sym = builder->addSymbol($2, getType($1));
+		builder->pushArgName(sym);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
-		builder.pushDataType(&getType($3));
-		Symbol *sym = builder.addSymbol($4, getType($3));
-		builder.pushArgName(sym);
+		builder->pushDataType(&getType($3));
+		Symbol *sym = builder->addSymbol($4, getType($3));
+		builder->pushArgName(sym);
 	}
 	|
 	;
@@ -89,32 +89,32 @@ func_defn: datatype IDENTIFIER '(' arglist ')' '{'
 	{
 		gTrace<<"function definition\n";
 		const std::string& string = $2;
-		FunctionProtoType* fp = builder.getProtoType(string);//use current dataTypeList
+		FunctionProtoType* fp = builder->getProtoType(string);//use current dataTypeList
 		if(fp == NULL) //find the prototype in the module. if not found, add a new one
-			builder.addProtoType(string, getType($1), &fp);
-		IcErr err = builder.addFunction(*fp);
+			builder->addProtoType(string, getType($1), &fp);
+		IcErr err = builder->addFunction(*fp);
 		if(err != eNoErr)
 			yyerror(errMsg[err]);
 	}
 
 	statement_block '}' 
 	{	//we should clear the m_curFunction after this, so that any global decl will not be a part of prev function's symtab
-		builder.endCodeBlock();	
+		builder->endCodeBlock();	
 	}
 	;
 	
 statement_block: statement_block statement |  ;
 	
 statement: declaration 
-	| assignment  { builder.insertStatement(*$1);}
+	| assignment  { builder->insertStatement(*$1);}
 	| expression';' 
 	{ 
 		gTrace<<"expression\n";
-		builder.insertStatement(*new ExpressionStatement(*(Expression *)$1));
+		builder->insertStatement(*new ExpressionStatement(*(Expression *)$1));
 	}
-	| return_stmt ';'{ builder.insertStatement(*$1);}
+	| return_stmt ';'{ builder->insertStatement(*$1);}
 	| while_statement { gTrace<<"done with while loop\n"; }
-	| break_statement ';' { gTrace<<"break\n"; builder.insertStatement(*$1); }
+	| break_statement ';' { gTrace<<"break\n"; builder->insertStatement(*$1); }
 	| if_else_statement { gTrace<<"if else"; }
 	| ';' { gTrace<<"empty statement\n";}
 	;
@@ -122,23 +122,23 @@ statement: declaration
 if_else_statement: IF '(' expression ')' 
 	{
 		gTrace<<"if statement ";
-		builder.insertStatement(*new BranchStatement(*(Expression*)$3));
+		builder->insertStatement(*new BranchStatement(*(Expression*)$3));
 	}
 		codeblock { gTrace<<"ending if block";  }
 	iftail
 	;
 
 iftail: ELSE {
-		builder.addBranch(*(Expression*)new Constant(1)); //a 'true' expression
+		builder->addBranch(*(Expression*)new Constant(1)); //a 'true' expression
 	}
-	codeblock { gTrace<<"ending else block"; builder.endCodeBlock(); }
+	codeblock { gTrace<<"ending else block"; builder->endCodeBlock(); }
 	| %prec LOWER_THAN_ELSE //Refer http://stackoverflow.com/questions/1737460/how-to-find-shift-reduce-conflict-in-this-yacc-file
-	 { builder.endCodeBlock(); }
+	 { builder->endCodeBlock(); }
 	;
 
 
-while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder.insertStatement(*new WhileStatement(*(Expression*)$3)); }
-	codeblock { gTrace<<"ending while loop\n"; builder.endCodeBlock(); }
+while_statement: WHILE '(' expression ')' { gTrace<<"while statement\n"; builder->insertStatement(*new WhileStatement(*(Expression*)$3)); }
+	codeblock { gTrace<<"ending while loop\n"; builder->endCodeBlock(); }
 	;
 
 codeblock: '{' statement_block '}'
@@ -149,8 +149,8 @@ break_statement: BREAK { $$ = new BreakStatement(); }
 	
 declaration: datatype varList ';' { gTrace<<"declaration "; currentType = -1; }
 
-varList: IDENTIFIER	{ builder.addSymbol($1, getType(currentType)); }
-	| varList',' IDENTIFIER { builder.addSymbol($3, getType(currentType)); }
+varList: IDENTIFIER	{ builder->addSymbol($1, getType(currentType)); }
+	| varList',' IDENTIFIER { builder->addSymbol($3, getType(currentType)); }
 	;
 	
 datatype: INTEGER 	{ gTrace<<"int "; $$ = currentType = Type::IntegerTy; }
@@ -161,7 +161,7 @@ datatype: INTEGER 	{ gTrace<<"int "; $$ = currentType = Type::IntegerTy; }
 assignment: IDENTIFIER '=' expression ';'	
 	{ 
 		gTrace<<"assignment";
-		Symbol *identifierSymbol = builder.getSymbol($1);
+		Symbol *identifierSymbol = builder->getSymbol($1);
 		if(identifierSymbol == NULL)
 			yyerror("Symbol Not Defined");
 		$$ = new Assignment(*new Variable(*identifierSymbol), *$3);
@@ -174,7 +174,7 @@ return_stmt: RETURN expression { $$ = new ReturnStatement($2);};
 expression: NUMBER { $$ = new Constant($1); }
 	| IDENTIFIER {
 		gTrace<<"identifier";
-		Symbol *identifierSymbol = builder.getSymbol($1);
+		Symbol *identifierSymbol = builder->getSymbol($1);
 		if(identifierSymbol == NULL)			
 			yyerror("Symbol Not Defined");			
 		$$ = new Variable(*identifierSymbol);
@@ -196,7 +196,7 @@ expression: NUMBER { $$ = new Constant($1); }
 func_call: IDENTIFIER'('paramlist')'
 	{
 		gTrace<<"function called";
-		Function* func = builder.getFunction($1);
+		Function* func = builder->getFunction($1);
 		if(func == NULL)
 			yyerror("Function not found");
 		$$ = new FunctionCall(*func, parameterList);
@@ -211,7 +211,7 @@ paramlist: expression { parameterList.push_back($1); }
 
 void yyerror(string s) {
     fprintf(stderr, "%s\n", s.c_str());
-    builder.pushError(s);
+    builder->pushError(s);
 }
 
 int yywrap (void ) {
@@ -242,13 +242,14 @@ Module* ParseFile(char *filename){
 		return NULL;
 	}
 	
+	builder = new ASTBuilder(); //!!!Check for memory leak
 	lexer.yyrestart(&fp);
 	if(gDebug.isYaccTraceOn())
 		yydebug = 1; //set it to 1 for text based debugging, 5 for graph based debugging
 	yyparse();
-	if(builder.hasErrors()){
+	if(builder->hasErrors()){
 		fprintf(stderr, "Stopping compilation as we found some syntax errors in %s\n!", filename);
 		return NULL;
 	}
-	return &builder.getModule();	
+	return &builder->getModule();	
 }
