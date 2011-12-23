@@ -84,7 +84,7 @@ void ILBuilder::Visit(Function& f){
 	m_asmOutputFile<<"define "<<"i32 " /* for now */<<"@" /*needs to be before function name*/<<f.getName()<<"(";
 	//output the params
 	FunctionProtoType& proto = f.getProtoType();
-	std::list<int>::iterator typeListIter = proto.getTypeList().begin();
+	std::list<Type*>::iterator typeListIter = proto.getTypeList().begin();
 	std::list<Symbol*>::iterator argSymbolListIter = f.getArgSymbolList().begin();
 	unsigned int numArgs = proto.getTypeList().size();
 	for(unsigned int i = 0 ; argSymbolListIter != f.getArgSymbolList().end() ; ++i, ++argSymbolListIter){

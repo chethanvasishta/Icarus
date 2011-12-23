@@ -132,7 +132,7 @@ class Statement : public Value{
 public:
 	//Visitors
 	virtual void accept(IClassVisitor &visitor)=0;
-	///!!! make this class abstract
+	
 private:	
 };
 
@@ -199,11 +199,11 @@ public:
 
 class FunctionProtoType{
 public:
-	FunctionProtoType(const std::string& name, std::list<int>& typeList, Type returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
+	FunctionProtoType(const std::string& name, std::list<Type*>& typeList, Type returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
 
 	//Getter-Setters
 	std::string getName() const { return m_name; }
-	std::list<int>& getTypeList() { return m_argTypeList; }
+	std::list<Type*>& getTypeList() { return m_argTypeList; }
 	Type& getReturnType() { return m_returnType; }
 
 	//overloaded operators
@@ -214,7 +214,7 @@ public:
 	
 private:
 	std::string m_name;
-	std::list<int> m_argTypeList; //just store the datatypes; no need of names for the proto
+	std::list<Type*> m_argTypeList; //just store the datatypes; no need of names for the proto
 	Type m_returnType;
 	FunctionProtoType();
 };
@@ -376,7 +376,7 @@ public:
 	std::string getName() const { return m_name; }
 	std::list<Function*>& getFunctions() { return m_functionList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
-	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
+	FunctionProtoType* getProtoType(const std::string name, std::list<Type*>& dataTypes);
 	Function* getFunction(const std::string name); //need to add support for datatypes too
 
 	IcErr addFunction(Function& f);

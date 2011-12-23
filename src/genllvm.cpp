@@ -68,11 +68,11 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 llvm::FunctionType& getFunctionType(Function& f, GenLLVM *g){
 	std::vector<llvm::Type*> args;
 	FunctionProtoType& fp = f.getProtoType();
-	std::list<int>::iterator argTypeIter = fp.getTypeList().begin();
+	std::list<Type*>::iterator argTypeIter = fp.getTypeList().begin();
 	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
-		args.push_back(llvm::Type::getInt32Ty(getGlobalContext()));
+		args.push_back(g->getLLVMType(**argTypeIter));
 	}
-	llvm::FunctionType *FT = llvm::FunctionType::get(g->getLLVMType(fp.getReturnType()), *new llvm::ArrayRef<llvm::Type*>(args), false); //set the proper return type
+	llvm::FunctionType *FT = llvm::FunctionType::get(g->getLLVMType(fp.getReturnType()), *new llvm::ArrayRef<llvm::Type*>(args), false);
 	return *FT;
 }
 

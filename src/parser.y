@@ -71,13 +71,13 @@ func_decl: datatype IDENTIFIER '(' arglist ')' ';'
 	
 arglist: datatype IDENTIFIER 
 	{
-		builder.pushDataType($1);
+		builder.pushDataType(&getType($1));
 		Symbol *sym = builder.addSymbol($2, getType($1));
 		builder.pushArgName(sym);
 	}
 	| arglist ',' datatype IDENTIFIER 
 	{
-		builder.pushDataType($3);
+		builder.pushDataType(&getType($3));
 		Symbol *sym = builder.addSymbol($4, getType($3));
 		builder.pushArgName(sym);
 	}

@@ -43,7 +43,7 @@ IcErr ASTBuilder::addProtoType(const std::string& name, Type returnType, Functio
 	return err;
 }
 
-FunctionProtoType* ASTBuilder::getProtoType(const std::string name, std::list<int> dataTypes){
+FunctionProtoType* ASTBuilder::getProtoType(const std::string name, std::list<Type*> dataTypes){
 	return m_module.getProtoType(name, dataTypes);
 }
 

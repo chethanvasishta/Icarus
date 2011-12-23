@@ -2,6 +2,7 @@
 #define ASTBUILDER_H
 
 #include "codegen.h"
+#include "Type.h"
 
 class ASTBuilder{ //This will be a builder class only and won't be necessary for further optimizations in the code
 public:
@@ -20,7 +21,7 @@ public:
 	
 	IcErr addProtoType(FunctionProtoType& fp);
 	IcErr addProtoType(const std::string& name, Type returnType, FunctionProtoType **fp);
-	FunctionProtoType* getProtoType(const std::string name, std::list<int> dataTypes);
+	FunctionProtoType* getProtoType(const std::string name, std::list<Type*> dataTypes);
 	FunctionProtoType* getProtoType(const std::string name) { return getProtoType(name, m_dataTypeList); }
 	
 	
@@ -30,7 +31,7 @@ public:
 	Module& getModule() { return m_module; }
 
 	//some helpers
-	void pushDataType(int type) { m_dataTypeList.push_back(type); }
+	void pushDataType(Type* type) { m_dataTypeList.push_back(type); }
 	void pushArgName(Symbol *arg) { m_argNameList.push_back(arg); }
 	void pushError(std::string error) { m_errorList.push_back(error); }
 	bool hasErrors() { return m_errorList.size() != 0; }
@@ -39,7 +40,7 @@ private:
 	Module& m_module;
 
 	//some helpers during building of AST
-	std::list<int> m_dataTypeList; //to store the data types of the arguments while constructing the argList
+	std::list<Type*> m_dataTypeList; //to store the data types of the arguments while constructing the argList
 	std::list<Symbol*> m_argNameList;	
 	std::list<std::string> m_errorList;
 };

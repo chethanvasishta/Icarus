@@ -88,8 +88,8 @@ bool FunctionProtoType::operator==(const FunctionProtoType& fpOther) const{
 	if(m_argTypeList.size() != fpOther.m_argTypeList.size())
 		return false;
 	unsigned int n = m_argTypeList.size();
-	std::list<int>::const_iterator typeIter = m_argTypeList.begin();
-	std::list<int>::const_iterator otherTypeIter = fpOther.m_argTypeList.begin();
+	std::list<Type*>::const_iterator typeIter = m_argTypeList.begin();
+	std::list<Type*>::const_iterator otherTypeIter = fpOther.m_argTypeList.begin();
 	for(unsigned int i = 0 ; i < n ; ++i, ++typeIter, ++otherTypeIter){
 		if(*typeIter != *otherTypeIter)
 			return false;	
@@ -164,7 +164,7 @@ IcErr Module::addProtoType(FunctionProtoType& fp){
 	return eNoErr;
 }
 
-FunctionProtoType* Module::getProtoType(const std::string name, std::list<int> dataTypes){
+FunctionProtoType* Module::getProtoType(const std::string name, std::list<Type*>& dataTypes){
 	FunctionProtoType& fp = *new FunctionProtoType(name, dataTypes, *new Type(Type::IntegerTy)); //no need of return type for comparing prototypes
 	std::list<FunctionProtoType*>::const_iterator protoIter = m_funcProtoList.begin();
 	for(; protoIter != m_funcProtoList.end(); ++protoIter){
