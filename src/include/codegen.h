@@ -112,10 +112,10 @@ private:
 
 class FunctionCall : public Expression {
 public:
-	FunctionCall(Function& function, std::list<Value*>& params): m_function(function), m_paramList(params){}
+	FunctionCall(FunctionProtoType& fp, std::list<Value*>& params): m_functionProtoType(fp), m_paramList(params){}
 
 	//Getter-Setters
-	Function& getFunction() { return m_function; }
+	FunctionProtoType& getFunctionProtoType() { return m_functionProtoType; }
 	std::list<Value*>& getParamList() { return m_paramList; }
 
 	//Visitors
@@ -124,7 +124,7 @@ public:
 	virtual Value* genIL(GenIL*);
 	virtual llvm::Value* genLLVM(GenLLVM*);
 private:
-	Function& m_function;
+	FunctionProtoType& m_functionProtoType;
 	std::list<Value*> m_paramList;
 };
 
@@ -377,6 +377,7 @@ public:
 	std::list<Function*>& getFunctions() { return m_functionList; }
 	std::list<Symbol*>& getSymbols() { return m_symbolTable.getSymbols(); }
 	FunctionProtoType* getProtoType(const std::string name, std::list<Type*>& dataTypes);
+	FunctionProtoType* getProtoType(const std::string name);//works till we allow overloading
 	Function* getFunction(const std::string name); //need to add support for datatypes too
 
 	IcErr addFunction(Function& f);

@@ -37,7 +37,7 @@ void DotWriter::Visit(BinopExpression& b){
 }
 
 void DotWriter::Visit(FunctionCall& f){
-	m_fileStream<<"subgraph {"<<f.getFunction().getName();
+	m_fileStream<<"subgraph {"<<f.getFunctionProtoType().getName();
 	std::list<Value*>::const_iterator iter = f.getParamList().begin();
 	for(; iter != f.getParamList().end(); ++iter)
 		(*iter)->accept(*this);

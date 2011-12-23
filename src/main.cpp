@@ -25,7 +25,7 @@ using namespace std;
 //global variables
 Module *module;
 
-void genExecutable(){
+void genExecutable(char *filename){
 	int i = system("llvm-as temp.ll"); //check if llvm is installed
 	if(!i) i = system("llc temp.bc");
 	if(!i) i = system("g++ temp.s");//we will generate a a.out	
@@ -40,22 +40,12 @@ int Compile(char *fileName){
 	GenIL *myILGen = new GenIL(*module);
 	module = myILGen->generateIL();
 
-	//gTrace<<"Printing the IL";
-	//if(gDebug.isDebuggable()){
-	//	PrintVisitor p;
-	//	p.Visit(*module);
-	//}
-
 	if(gDebug.isDotGen()){
 		DotWriter d;
 		std::string filename = "postgenIL.dot";
 		d.writeDotFile(filename, *module);
 	}
 		
-	//if optimization enabled
-	//PassManager passMgr;
-	//passMgr.addPass(*new ConstantFolder());	
-	
 	GenLLVM genLLVM;
 	genLLVM.generateLLVM(*module);
 	llvm::Module& llvmModule = genLLVM.getModule();
@@ -72,6 +62,7 @@ int Compile(char *fileName){
 	std::string moduleStr;
 	llvm::raw_string_ostream string(moduleStr);
 	fstream moduleDumpFile;
+	char 
 	moduleDumpFile.open("temp.ll", fstream::in | fstream::out | fstream::trunc);
 	if(moduleDumpFile.is_open()){
 		llvmModule.print(string, NULL);

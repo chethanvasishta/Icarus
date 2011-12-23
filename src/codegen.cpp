@@ -174,6 +174,15 @@ FunctionProtoType* Module::getProtoType(const std::string name, std::list<Type*>
 	return NULL; //not found
 }
 
+FunctionProtoType* Module::getProtoType(const std::string name){
+	std::list<FunctionProtoType*>::const_iterator protoIter = m_funcProtoList.begin();
+	for(; protoIter != m_funcProtoList.end(); ++protoIter){
+		if((*protoIter)->getName() == name)
+			return *protoIter;
+	}
+	return NULL; //not found
+}
+
 IcErr Module::insertStatement(Function& f, Statement& s){
 	return f.addStatement(s);
 }

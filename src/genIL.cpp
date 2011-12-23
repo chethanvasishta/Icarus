@@ -40,7 +40,7 @@ Value* FunctionCall::genIL(GenIL* g){
 	std::list<Value*>::iterator paramIter = oldParams.begin();
 	for(; paramIter != oldParams.end(); ++paramIter)
 		newParams.push_back((*paramIter)->genIL(g));
-	return new FunctionCall(getFunction(), newParams);
+	return new FunctionCall(getFunctionProtoType(), newParams);
 }
 
 Value* Assignment::genIL(GenIL* g){

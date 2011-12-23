@@ -26,6 +26,7 @@ public:
 	
 	
 	Function* getFunction(const std::string name);
+	FunctionProtoType* getFunctionProtoType(const std::string& name);
 	bool endCodeBlock();
 
 	Module& getModule() { return m_module; }

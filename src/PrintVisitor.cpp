@@ -23,7 +23,7 @@ void PrintVisitor::Visit(BinopExpression& b){
 }
 
 void PrintVisitor::Visit(FunctionCall& f){
-	cout<<"Function Call: "<<f.getFunction().getName()<<endl;
+	cout<<"Function Call: "<<f.getFunctionProtoType().getName()<<endl;
 	std::list<Value*>::const_iterator iter = f.getParamList().begin();
 	for(; iter != f.getParamList().end(); ++iter)
 		(*iter)->accept(*this);

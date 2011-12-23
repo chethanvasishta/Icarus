@@ -65,9 +65,8 @@ llvm::Value* BinopExpression::genLLVM(GenLLVM* g){
 }
 
 //Helper function to get a llvm function type from our function
-llvm::FunctionType& getFunctionType(Function& f, GenLLVM *g){
+llvm::FunctionType& getFunctionType(FunctionProtoType& fp, GenLLVM *g){
 	std::vector<llvm::Type*> args;
-	FunctionProtoType& fp = f.getProtoType();
 	std::list<Type*>::iterator argTypeIter = fp.getTypeList().begin();
 	for(; argTypeIter != fp.getTypeList().end(); ++argTypeIter){
 		args.push_back(g->getLLVMType(**argTypeIter));
@@ -84,8 +83,8 @@ llvm::Value* FunctionCall::genLLVM(GenLLVM* g){
 		paramArrayRef.push_back((*paramIter)->genLLVM(g));
 	}
 
-	llvm::FunctionType *FT = &getFunctionType(getFunction(), g);
-	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getFunction().getName(), FT));
+	llvm::FunctionType *FT = &getFunctionType(getFunctionProtoType(), g);
+	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getFunctionProtoType().getName(), FT));
 	
 	return g->getBuilder().CreateCall(F, *new llvm::ArrayRef<llvm::Value*>(paramArrayRef), "");
 }
@@ -184,7 +183,7 @@ llvm::Value* BranchStatement::genLLVM(GenLLVM* g){
 
 llvm::Value* Function::genLLVM(GenLLVM* g){
 
-	llvm::FunctionType *FT = &getFunctionType(*this, g);
+	llvm::FunctionType *FT = &getFunctionType(getProtoType(), g);
 	llvm::Function *F = static_cast<llvm::Function*>(g->getModule().getOrInsertFunction(getName(), FT));
 
 	BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);

@@ -70,6 +70,10 @@ Function* ASTBuilder::getFunction(const std::string name){
 	return m_module.getFunction(name);
 }
 
+FunctionProtoType* ASTBuilder::getFunctionProtoType(const std::string& name){
+	return m_module.getProtoType(name);
+}
+
 Symbol* ASTBuilder::addSymbol(char *s, Type& type){ // this should have more info like datatype, scope etc
 	Symbol *ourSymbol = new Symbol(*new std::string(s), type);
 	IcErr err = addSymbol(*ourSymbol);

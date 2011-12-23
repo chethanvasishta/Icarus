@@ -196,10 +196,12 @@ expression: NUMBER { $$ = new Constant($1); }
 func_call: IDENTIFIER'('paramlist')'
 	{
 		gTrace<<"function called";
-		Function* func = builder->getFunction($1);
-		if(func == NULL)
+		std::list<Type*> paramTypeList;
+		
+		FunctionProtoType* fp = builder->getFunctionProtoType($1);
+		if(fp == NULL)
 			yyerror("Function not found");
-		$$ = new FunctionCall(*func, parameterList);
+		$$ = new FunctionCall(*fp, parameterList);
 		parameterList.clear();
 	}
 
