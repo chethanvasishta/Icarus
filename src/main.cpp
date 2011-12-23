@@ -28,7 +28,7 @@ Module *module;
 void genExecutable(){
 	int i = system("llvm-as temp.ll"); //check if llvm is installed
 	if(!i) i = system("llc temp.bc");
-	if(!i) i = system("g++ temp.s");//we will generate a a.out	
+	if(!i) i = system("g++ temp.s obj/helper.o");//we will generate a a.out	
 }
 
 int Compile(char *fileName){
