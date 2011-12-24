@@ -34,7 +34,7 @@ IcErr ASTBuilder::addProtoType(FunctionProtoType& fp){
 	return m_module.addProtoType(fp);
 }
 
-IcErr ASTBuilder::addProtoType(const std::string& name, Type returnType, FunctionProtoType **fpPtr){
+IcErr ASTBuilder::addProtoType(const std::string& name, Type& returnType, FunctionProtoType **fpPtr){
 	FunctionProtoType& fp = *new FunctionProtoType(name, m_dataTypeList, returnType);
 	IcErr err = m_module.addProtoType(fp);
 	m_dataTypeList.clear();

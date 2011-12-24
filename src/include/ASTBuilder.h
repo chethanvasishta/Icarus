@@ -20,7 +20,8 @@ public:
 	IcErr addBranch(Expression& s);
 	
 	IcErr addProtoType(FunctionProtoType& fp);
-	IcErr addProtoType(const std::string& name, Type returnType, FunctionProtoType **fp);
+
+	IcErr addProtoType(const std::string& name, Type& returnType, FunctionProtoType **fp);
 	FunctionProtoType* getProtoType(const std::string name, std::list<Type*> dataTypes);
 	FunctionProtoType* getProtoType(const std::string name) { return getProtoType(name, m_dataTypeList); }
 	

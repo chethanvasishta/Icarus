@@ -199,7 +199,7 @@ public:
 
 class FunctionProtoType{
 public:
-	FunctionProtoType(const std::string& name, std::list<Type*>& typeList, Type returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
+	FunctionProtoType(const std::string& name, std::list<Type*>& typeList, Type& returnType): m_name(name), m_argTypeList(typeList), m_returnType(returnType){}
 
 	//Getter-Setters
 	std::string getName() const { return m_name; }
@@ -215,7 +215,7 @@ public:
 private:
 	std::string m_name;
 	std::list<Type*> m_argTypeList; //just store the datatypes; no need of names for the proto
-	Type m_returnType;
+	Type& m_returnType;
 	FunctionProtoType();
 };
 
@@ -233,7 +233,7 @@ public:
 private:
 	Symbol();
 	std::string m_name; //we need to add more details regarding the type
-	Type m_type;
+	Type& m_type;
 };
 
 class SymbolTable{

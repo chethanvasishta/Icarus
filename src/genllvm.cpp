@@ -238,6 +238,9 @@ llvm::Type* GenLLVM::getLLVMType(Type& type){
 			return llvm::Type::getFloatTy(getGlobalContext());
 		case Type::VoidTy:
 			return llvm::Type::getVoidTy(getGlobalContext());
-	
+		case Type::ArrayTy:
+			ArrayType* arrType = (ArrayType*)(&type);		
+			llvm::Type* elementType = getLLVMType(*new Type(arrType->getEltTypeID()));
+			return llvm::ArrayType::get(elementType, arrType->getNumElements());
 	}
 }

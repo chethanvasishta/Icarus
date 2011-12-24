@@ -16,6 +16,7 @@ extern "C" FILE *yyin;
 
 //for types
 Type& getType(int parsedType);
+Type& getArrayType(int parsedType, int numElts);
 int currentType = -1;
 
 
@@ -151,6 +152,7 @@ declaration: datatype varList ';' { gTrace<<"declaration "; currentType = -1; }
 
 varList: IDENTIFIER	{ builder->addSymbol($1, getType(currentType)); }
 	| varList',' IDENTIFIER { builder->addSymbol($3, getType(currentType)); }
+	| IDENTIFIER '[' NUMBER ']' { builder->addSymbol($1, getArrayType(currentType, $3)); }
 	;
 	
 datatype: INTEGER 	{ gTrace<<"int "; $$ = currentType = Type::IntegerTy; }
@@ -232,6 +234,18 @@ Type& getType(int parsedType){
 			return *new Type((Type::TypeID)parsedType);
 			break;
 		default: yyerror("Unknown type in getType()");
+			break;
+	}
+}
+
+Type& getArrayType(int parsedType, int numElements){
+	switch(parsedType){
+		case Type::IntegerTy:
+		case Type::FloatTy:
+		case Type::VoidTy:		
+			return *new ArrayType((Type::TypeID)parsedType, numElements);
+			break;
+		default: yyerror("Unknown type in getArrayType()");
 			break;
 	}
 }
