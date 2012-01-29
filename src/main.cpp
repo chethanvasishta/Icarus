@@ -14,6 +14,7 @@
 #include "debug.h"
 #include "ConstantFolder.h"
 #include <llvm/PassManager.h>
+#include <llvm/Analysis/Verifier.h>
 
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
 
@@ -37,8 +38,8 @@ int Compile(char *fileName){
 	module = ParseFile(fileName);
 	if(module == NULL)
 		return -1; //there was some syntax error. Hence we skip all other checks
-	GenIL *myILGen = new GenIL(*module);
-	module = myILGen->generateIL();
+	//GenIL *myILGen = new GenIL(*module);
+	//module = myILGen->generateIL();
 
 	if(gDebug.isDotGen()){
 		DotWriter d;
@@ -48,7 +49,7 @@ int Compile(char *fileName){
 		
 	GenLLVM genLLVM;
 	genLLVM.generateLLVM(*module);
-	llvm::Module& llvmModule = genLLVM.getModule();
+	llvm::Module& llvmModule = genLLVM.getModule();	
 
 	if(gDebug.isOptimizing()){
 		llvm::PassManager passMgr;
@@ -58,6 +59,8 @@ int Compile(char *fileName){
 	
 	if(gDebug.isDebuggable())
 		llvmModule.dump();
+
+	llvm::verifyModule(llvmModule);
 
 	std::string moduleStr;
 	llvm::raw_string_ostream string(moduleStr);
