@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include "debug.h"
 #include "ConstantFolder.h"
+#include "DominanceTreeConstructor.h"
 #include <llvm/PassManager.h>
 
 extern Module* ParseFile(char *filename); //using this for now. need to create a standard header file for lex
@@ -52,6 +53,10 @@ int Compile(char *fileName){
 
 	if(gDebug.isOptimizing()){
 		llvm::PassManager passMgr;
+        //Analysis Passes
+        passMgr.add(new DominanceTreeConstructor());
+
+        //Optimization Passes
 		passMgr.add(new ConstantFolder());
 		passMgr.run(llvmModule);
 	}
