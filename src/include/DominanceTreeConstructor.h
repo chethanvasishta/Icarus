@@ -5,12 +5,11 @@ using llvm::FunctionPass;
 struct DominanceTreeConstructor : public FunctionPass {
 public:
     static char ID;
-    DominanceTreeConstructor() : FunctionPass(ID) {}
+    DominanceTreeConstructor() : FunctionPass(ID){}
 
-    virtual bool runOnFunction(llvm::Function &F){
-        llvm::errs() << "We are in Dominance Tree Constructor Pass - Chethan";
-        return false;
-    }
+    virtual bool doInitialization(llvm::Module &M){}
+	virtual bool runOnFunction(llvm::Function &F);
+	virtual bool doFinalization(llvm::Module &M){}
 
 };//end of struct DominanceTreeConstructor
 
