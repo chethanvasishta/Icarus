@@ -13,19 +13,16 @@ char DominanceTreeConstructor::ID = 0;
 static Trace& gTrace = Trace::getInstance();
 
 bool DominanceTreeConstructor::runOnFunction(Function &F){
-	gTrace<<" Constructing Dominator Tree for "<<F.getName();
-
-    Function::BasicBlockListType& bbList = F.getBasicBlockList();
-    Function::BasicBlockListType::iterator iter = bbList.begin();
+	gTrace<<" Constructing Dominator Tree for "<<F.getName(); 
     /*
      * Create a multimap of nodes mapped to their dominators.
      * Set the dominator of each node to be itself
      * iterate through the basic blocks and re calculate the dominators for each of them
      * Check if any of the dominator sets changed. If so repeat the process
      */
-    int numBlocks = F.getBasicBlockList().size();
+    Function::BasicBlockListType& bbList = F.getBasicBlockList();
     std::map<BasicBlock*, std::set<BasicBlock*>* > dom;
-    for(int i = 0 ; i < numBlocks ; ++i, ++iter){
+    for(Function::BasicBlockListType::iterator iter = bbList.begin(); iter != bbList.end() ;++iter){
         std::set<BasicBlock*> *domSet = new std::set<BasicBlock*>(); //we cannot allocate on the stack!
         domSet->insert(&*iter);
         dom.insert(pair<BasicBlock*, std::set<BasicBlock*>*>(&*iter, domSet));
@@ -46,8 +43,10 @@ bool DominanceTreeConstructor::runOnFunction(Function &F){
                     }
                 }
                 newDom.insert(bb); //Union n
-                if(newDom != *dom[bb])
+                if(newDom != *dom[bb]){
                     changed = true;
+                    *dom[bb] = newDom;
+                }
         }
     }
 	return false;

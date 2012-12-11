@@ -1,3 +1,6 @@
+#ifndef DOMINANCE_TREE_CONSTRUCTOR
+#define DOMINANCE_TREE_CONSTRUCTOR
+
 #include "llvm/Pass.h"
 #include "llvm/Function.h"
 #include "llvm/Support/raw_ostream.h"
@@ -14,4 +17,5 @@ public:
 };//end of struct DominanceTreeConstructor
 
 static llvm::RegisterPass<DominanceTreeConstructor> x("dominance", "dominance tree constructor", false /* true - read only pass */, true /* analysis pass*/);
+#endif //DOMINANCE_TREE_CONSTRUCTOR
 
