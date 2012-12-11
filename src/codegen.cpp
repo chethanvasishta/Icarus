@@ -134,6 +134,13 @@ IcErr Function::addSymbol(Symbol& sym){
 	m_symbolTable.add(sym);
 }
 
+Function::~Function(){
+    std::list<Statement*>::iterator stIter = m_statementList.begin();
+    for(; stIter != m_statementList.end(); ++stIter)
+        delete (*stIter);
+    m_statementList.clear();
+}
+
 //--------------SymbolTable---------------
 
 IcErr SymbolTable::add(Symbol& sym){
@@ -194,6 +201,10 @@ std::ostream& operator<<(std::ostream& stream, const Module& m){
 
 Module::~Module(){
 	delete &m_symbolTable;
+    std::list<Function*>::iterator funcIter = m_functionList.begin();
+    for(; funcIter != m_functionList.end(); ++funcIter){
+        delete (*funcIter);
+    }
 }
 
 Function* Module::getFunction(const std::string name){
