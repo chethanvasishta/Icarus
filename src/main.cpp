@@ -51,6 +51,12 @@ int Compile(char *fileName){
 	genLLVM.generateLLVM(*module);
 	llvm::Module& llvmModule = genLLVM.getModule();
 
+    //Dispose old module
+    if(module != NULL){
+        delete module;
+        module = NULL;
+    }
+
 	if(gDebug.isOptimizing()){
 		llvm::PassManager passMgr;
         //Analysis Passes
