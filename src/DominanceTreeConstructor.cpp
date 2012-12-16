@@ -8,11 +8,8 @@
 #include <llvm/Support/CFG.h> //We need a specialization of the GraphTrait class 
 #include "DominanceTree.h"
 
-using namespace std;
-//using namespace llvm;
 using llvm::BasicBlock;
 using llvm::Function;
-using namespace llvm;
 char DominanceTreeConstructor::ID = 0;
 
 static Trace& gTrace = Trace::getInstance();
@@ -57,7 +54,7 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
 
     // Keith D. Cooper's algorithm for computing dominators
     
-    ::DominatorTree<BasicBlock> domTree;
+    DominanceTree<BasicBlock> domTree;
     std::map<BasicBlock*, BasicBlock*> doms; //These are nothing but immediate dominators for a given basic block
     
     Function::BasicBlockListType& bbList = F.getBasicBlockList();
@@ -73,11 +70,11 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
     bool changed = true;
     while(changed){
         changed = false;
-        ReversePostOrderTraversal<Function*> RPOT(&F);
-        for(ReversePostOrderTraversal<Function*>::rpo_iterator rpoIter = RPOT.begin(); rpoIter != RPOT.end(); ++rpoIter){
+        llvm::ReversePostOrderTraversal<Function*> RPOT(&F);
+        for(llvm::ReversePostOrderTraversal<Function*>::rpo_iterator rpoIter = RPOT.begin(); rpoIter != RPOT.end(); ++rpoIter){
             if(*rpoIter != startNode){
                 BasicBlock* newIdom = NULL;//first processed predecessor of rpoIter
-                for(idf_iterator<BasicBlock*> predIter = idf_begin(*rpoIter); //for each of its predecessor
+                for(llvm::idf_iterator<BasicBlock*> predIter = idf_begin(*rpoIter); //for each of its predecessor
                                               predIter != idf_end(*rpoIter); 
                                               ++predIter){
                     BasicBlock* pred = *predIter;
@@ -85,7 +82,7 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
                         if(newIdom == NULL)
                             newIdom = pred;
                         else
-                            newIdom = intersect(pred, newIdom);
+                            newIdom = intersect(domTree, pred, newIdom);
                     }
                 }
                 if(newIdom != doms[*rpoIter]){
@@ -96,4 +93,8 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
         }
     }
 	return false;
+}
+
+BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTree, BasicBlock* pred, BasicBlock* newIdom){
+    return newIdom; //for now
 }
