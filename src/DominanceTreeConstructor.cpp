@@ -3,6 +3,7 @@
 #include "debug.h"
 #include <map>
 #include <set>
+#include <queue>
 #include <llvm/ADT/DepthFirstIterator.h> //For iterating through the predecessors of the basic block
 #include <llvm/ADT/PostOrderIterator.h> //For iterating through the predecessors of the basic block
 #include <llvm/Support/CFG.h> //We need a specialization of the GraphTrait class 
@@ -16,42 +17,7 @@ static Trace& gTrace = Trace::getInstance();
 
 bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
 	gTrace<<" Constructing Dominator Tree for "<<F.getName(); 
-    /*
-     * Create a multimap of nodes mapped to their dominators.
-     * Set the dominator of each node to be itself
-     * iterate through the basic blocks and re calculate the dominators for each of them
-     * Check if any of the dominator sets changed. If so repeat the process
-     */
-    /* Function::BasicBlockListType& bbList = F.getBasicBlockList();
-    std::map<BasicBlock*, std::set<BasicBlock*>* > dom;
-    for(Function::BasicBlockListType::iterator iter = bbList.begin(); iter != bbList.end() ;++iter){
-        std::set<BasicBlock*> *domSet = new std::set<BasicBlock*>(); //we cannot allocate on the stack!
-        domSet->insert(&*iter);
-        dom.insert(pair<BasicBlock*, std::set<BasicBlock*>*>(&*iter, domSet));
-    }
-
-    bool changed = true;
-    while(changed){
-        changed = false;
-        for(Function::iterator bbIter = F.begin() ; bbIter != F.end(); ++bbIter){ //for each basic block 
-                std::set<BasicBlock*> newDom;
-                BasicBlock* bb = dynamic_cast<BasicBlock*>(&*bbIter);
-                for(idf_iterator<BasicBlock*> predIter = idf_begin(bb); //for each of its predecessor
-                                              predIter != idf_end(bb); 
-                                              ++predIter){
-                    std::set<BasicBlock*> *predDom = dom[*predIter];
-                    for(std::set<BasicBlock*>::iterator predDomIter = predDom->begin() ; predDomIter != predDom->end(); ++predDomIter){
-                        newDom.insert(*predDomIter);
-                    }
-                }
-                newDom.insert(bb); //Union n
-                if(newDom != *dom[bb]){
-                    changed = true;
-                    *dom[bb] = newDom;
-                }
-        }
-    } */
-
+   
     // Keith D. Cooper's algorithm for computing dominators
     
     DominanceTree<BasicBlock> domTree;
@@ -82,19 +48,55 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
                         if(newIdom == NULL)
                             newIdom = pred;
                         else
-                            newIdom = intersect(domTree, pred, newIdom);
+                            newIdom = intersect(domTree, doms, pred, newIdom);
                     }
                 }
                 if(newIdom != doms[*rpoIter]){
+                    domTree.setIDom(*rpoIter, newIdom);
                     doms[*rpoIter] = newIdom;
                     changed = true;
                 }
             }
         }
     }
+
+    //if debug
+    domTree.dump();
 	return false;
 }
 
-BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTree, BasicBlock* pred, BasicBlock* newIdom){
-    return newIdom; //for now
+BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTree, std::map<BasicBlock*, BasicBlock*>& doms, BasicBlock* pred, BasicBlock* newIdom){
+    BasicBlock* finger1 = pred;
+    BasicBlock* finger2 = newIdom;
+    while(domTree.depth(finger1) != domTree.depth(finger2)){
+        while(domTree.depth(finger1) > domTree.depth(finger2))
+            finger1 = doms[finger1];
+        while(domTree.depth(finger2) > domTree.depth(finger1))
+            finger2 = doms[finger2];
+    }
+    return finger1; //for now
 }
+
+template<>
+void DominanceTree<BasicBlock>::dump(){
+    gTrace<<"Printing dominance tree\n";
+    if(m_root == NULL){
+        gTrace<<"Graph is empty\n";
+        return;
+    }
+    std::queue<DominanceNode<BasicBlock>* > visitQ;
+    visitQ.push(m_root);
+    while(!visitQ.empty()){
+        DominanceNode<BasicBlock>* node = visitQ.front();
+        gTrace<<"*"<<node->getActualNode()->getName()<<" --> ";
+        visitQ.pop();
+        std::set<DominanceNode<BasicBlock>*>& children = node->getChildren();
+        for(typename std::set<DominanceNode<BasicBlock>*>::iterator iter = children.begin();
+                                          iter != children.end(); ++iter){
+            gTrace<<((DominanceNode<BasicBlock>*)(*iter))->getActualNode()->getName()<<" ";
+            visitQ.push(*iter);
+        }
+        gTrace<<"\n";
+    }
+}
+

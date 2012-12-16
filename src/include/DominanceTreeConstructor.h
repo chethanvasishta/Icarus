@@ -5,6 +5,7 @@
 #include "llvm/Function.h"
 #include "llvm/Support/raw_ostream.h"
 #include "DominanceTree.h"
+#include <map>
 using llvm::FunctionPass;
 using llvm::BasicBlock;
 struct DominanceTreeConstructor : public FunctionPass {
@@ -16,7 +17,7 @@ public:
 	virtual bool runOnFunction(llvm::Function &F);
 	virtual bool doFinalization(llvm::Module &M){}
 private:
-    BasicBlock* intersect(DominanceTree<BasicBlock>&, BasicBlock*, BasicBlock*);
+    BasicBlock* intersect(DominanceTree<BasicBlock>&, std::map<BasicBlock*, BasicBlock*>&,  BasicBlock*, BasicBlock*);
 
 };//end of struct DominanceTreeConstructor
 
