@@ -11,7 +11,10 @@
 
 using llvm::BasicBlock;
 using llvm::Function;
+using namespace llvm;
 char DominanceTreeConstructor::ID = 0;
+
+INITIALIZE_PASS(DominanceTreeConstructor, "domtree", "Dominator Tree Construction", true, true)
 
 static Trace& gTrace = Trace::getInstance();
 
@@ -21,7 +24,6 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
     // Keith D. Cooper's algorithm for computing dominators
     
     DominanceTree<BasicBlock> domTree;
-    std::map<BasicBlock*, BasicBlock*> doms; //These are nothing but immediate dominators for a given basic block
     
     Function::BasicBlockListType& bbList = F.getBasicBlockList();
     for(Function::BasicBlockListType::iterator iter = bbList.begin(); iter != bbList.end() ;++iter){

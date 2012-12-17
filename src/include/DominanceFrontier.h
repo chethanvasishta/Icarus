@@ -4,7 +4,12 @@
 #include "llvm/Pass.h"
 #include "llvm/Function.h"
 #include "llvm/Support/raw_ostream.h"
+#include <set>
+#include <map>
+
 using llvm::FunctionPass;
+using llvm::BasicBlock;
+
 struct DominanceFrontier : public FunctionPass {
 public:
     static char ID;
@@ -14,8 +19,14 @@ public:
 	virtual bool runOnFunction(llvm::Function &F);
 	virtual bool doFinalization(llvm::Module &M){}
 
+private:
+    std::map<BasicBlock*, std::set<BasicBlock*> > m_frontiers;
+
+    //helper functions
+    void print();
+
 };//end of struct DominanceFrontier
 
-static llvm::RegisterPass<DominanceFrontier> x("dominance frontier", "dominance frontier calculator", false /* true - read only pass */, true /* analysis pass*/);
+static llvm::RegisterPass<DominanceFrontier> df("dominance frontier", "dominance frontier calculator", false /* true - read only pass */, true /* analysis pass*/);
 #endif //DOMINANCE_FRONTIER
 
