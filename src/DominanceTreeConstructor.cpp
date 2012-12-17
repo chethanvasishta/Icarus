@@ -14,7 +14,7 @@ using llvm::Function;
 using namespace llvm;
 char DominanceTreeConstructor::ID = 0;
 
-INITIALIZE_PASS(DominanceTreeConstructor, "domtree", "Dominator Tree Construction", true, true)
+//INITIALIZE_PASS(DominanceTreeConstructor, "domtree", "Dominator Tree Construction", true, true)
 
 static Trace& gTrace = Trace::getInstance();
 
@@ -42,8 +42,8 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
         for(llvm::ReversePostOrderTraversal<Function*>::rpo_iterator rpoIter = RPOT.begin(); rpoIter != RPOT.end(); ++rpoIter){
             if(*rpoIter != startNode){
                 BasicBlock* newIdom = NULL;//first processed predecessor of rpoIter
-                for(llvm::idf_iterator<BasicBlock*> predIter = idf_begin(*rpoIter); //for each of its predecessor
-                                              predIter != idf_end(*rpoIter); 
+                for(llvm::pred_iterator predIter = pred_begin(*rpoIter); //for each of its predecessor
+                                              predIter != pred_end(*rpoIter); 
                                               ++predIter){
                     BasicBlock* pred = *predIter;
                     if(doms[pred] != NULL){
