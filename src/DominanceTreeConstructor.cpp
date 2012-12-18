@@ -13,6 +13,11 @@ using namespace llvm;
 char DominanceTreeConstructor::ID = 0;
 
 //INITIALIZE_PASS(DominanceTreeConstructor, "domtree", "Dominator Tree Construction", true, true)
+//INITIALIZE_PASS_BEGIN(DominanceTreeConstructor, "domfrontier",
+//                "Dominance Frontier Construction", true, true)
+//INITIALIZE_PASS_END(DominanceTreeConstructor, "domfrontier",
+//                "Dominance Frontier Construction", true, true)
+
 
 static Trace& gTrace = Trace::getInstance();
 
@@ -53,7 +58,7 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
                         if(newIdom == NULL)
                             newIdom = pred;
                         else
-                            newIdom = intersect(domTree, doms, pred, newIdom);
+                            newIdom = intersect(pred, newIdom);
                     }
                 }
                 if(newIdom != doms[*rpoIter]){
@@ -66,11 +71,11 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
     }
 
     //if debug
-    domTree.dump();
+    domTree.print();
 	return false;
 }
 
-BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTree, std::map<BasicBlock*, BasicBlock*>& doms, BasicBlock* pred, BasicBlock* newIdom){
+BasicBlock* DominanceTreeConstructor::intersect(BasicBlock* pred, BasicBlock* newIdom){
     BasicBlock* finger1 = pred;
     BasicBlock* finger2 = newIdom;
     while(uniq[finger1] != uniq[finger2]) {
@@ -83,7 +88,7 @@ BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTr
     }
 
 template<>
-void DominanceTree<BasicBlock>::dump(){
+void DominanceTree<BasicBlock>::print(){
     gTrace<<"Printing dominance tree\n";
     if(m_root == NULL){
         gTrace<<"Graph is empty\n";

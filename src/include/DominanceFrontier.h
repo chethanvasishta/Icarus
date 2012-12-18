@@ -6,6 +6,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include <set>
 #include <map>
+#include "DominanceTreeConstructor.h"
 
 using llvm::FunctionPass;
 using llvm::BasicBlock;
@@ -18,6 +19,11 @@ public:
     virtual bool doInitialization(llvm::Module &M){}
 	virtual bool runOnFunction(llvm::Function &F);
 	virtual bool doFinalization(llvm::Module &M){}
+
+    virtual void getAnalysisUsage(llvm::AnalysisUsage &AU) const {
+        AU.setPreservesAll();
+        AU.addRequired<DominanceTreeConstructor>();
+    }
 
 private:
     std::map<BasicBlock*, std::set<BasicBlock*> > m_frontiers;

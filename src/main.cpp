@@ -62,7 +62,7 @@ int Compile(char *fileName){
 		llvm::PassManager passMgr;
         //Analysis Passes
         passMgr.add(new DominanceTreeConstructor());
-        //passMgr.add(new DominanceFrontier());
+        passMgr.add(new DominanceFrontier());
 
         //Optimization Passes
 		passMgr.add(new ConstantFolder());

@@ -47,7 +47,7 @@ public:
     void setRoot(T* node);
     int depth(T*);
     void setIDom(T* node, T* dom);
-    void dump();
+    void print();
 private:
     DominanceNode<T>* m_root;
 
@@ -128,6 +128,6 @@ std::set<DominanceNode<T>*>& DominanceNode<T>::getDominators(){
 }
 
 //specialization for basic block
-template<> void DominanceTree<llvm::BasicBlock>::dump();
+template<> void DominanceTree<llvm::BasicBlock>::print();
 
 #endif //DOMINANCE_TREE
