@@ -24,8 +24,10 @@ public:
     std::map<BasicBlock*, BasicBlock*>& getDoms() { return doms; }
 
 private:
-    BasicBlock* intersect(DominanceTree<BasicBlock>&, std::map<BasicBlock*, BasicBlock*>&,  BasicBlock*, BasicBlock*);    
+    BasicBlock* intersect(DominanceTree<BasicBlock>&, std::map<BasicBlock*, BasicBlock*>&,  BasicBlock*, BasicBlock*);
+
     std::map<BasicBlock*, BasicBlock*> doms; //These are nothing but immediate dominators for a given basic block
+    std::map<BasicBlock*, int> uniq;
 
 };//end of struct DominanceTreeConstructor
 

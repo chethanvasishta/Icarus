@@ -9,8 +9,6 @@
 #include <llvm/Support/CFG.h> //We need a specialization of the GraphTrait class 
 #include "DominanceTree.h"
 
-using llvm::BasicBlock;
-using llvm::Function;
 using namespace llvm;
 char DominanceTreeConstructor::ID = 0;
 
@@ -35,14 +33,19 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
     doms[startNode] = startNode;
     domTree.setRoot(startNode); //can we make this more generic?
 
+    //Assign depth first order numbering to each basic block
+    int count = 0;
+    for(df_iterator<BasicBlock*> dfIter = df_begin(startNode); dfIter != df_end(startNode); ++dfIter)
+        uniq[*dfIter] = ++count;
+
     bool changed = true;
     while(changed){
         changed = false;
-        llvm::ReversePostOrderTraversal<Function*> RPOT(&F);
-        for(llvm::ReversePostOrderTraversal<Function*>::rpo_iterator rpoIter = RPOT.begin(); rpoIter != RPOT.end(); ++rpoIter){
+        ReversePostOrderTraversal<Function*> RPOT(&F);
+        for(ReversePostOrderTraversal<Function*>::rpo_iterator rpoIter = RPOT.begin(); rpoIter != RPOT.end(); ++rpoIter){
             if(*rpoIter != startNode){
                 BasicBlock* newIdom = NULL;//first processed predecessor of rpoIter
-                for(llvm::pred_iterator predIter = pred_begin(*rpoIter); //for each of its predecessor
+                for(pred_iterator predIter = pred_begin(*rpoIter); //for each of its predecessor
                                               predIter != pred_end(*rpoIter); 
                                               ++predIter){
                     BasicBlock* pred = *predIter;
@@ -70,14 +73,14 @@ bool DominanceTreeConstructor::runOnFunction(llvm::Function &F){
 BasicBlock* DominanceTreeConstructor::intersect(DominanceTree<BasicBlock>& domTree, std::map<BasicBlock*, BasicBlock*>& doms, BasicBlock* pred, BasicBlock* newIdom){
     BasicBlock* finger1 = pred;
     BasicBlock* finger2 = newIdom;
-    while(domTree.depth(finger1) != domTree.depth(finger2)){
-        while(domTree.depth(finger1) > domTree.depth(finger2))
+    while(uniq[finger1] != uniq[finger2]) {
+        while(uniq[finger1] > uniq[finger2])
             finger1 = doms[finger1];
-        while(domTree.depth(finger2) > domTree.depth(finger1))
+        while(uniq[finger2] > uniq[finger1])
             finger2 = doms[finger2];
     }
     return finger1; //for now
-}
+    }
 
 template<>
 void DominanceTree<BasicBlock>::dump(){
