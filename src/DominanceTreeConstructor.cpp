@@ -84,8 +84,8 @@ BasicBlock* DominanceTreeConstructor::intersect(BasicBlock* pred, BasicBlock* ne
         while(uniq[finger2] > uniq[finger1])
             finger2 = doms[finger2];
     }
-    return finger1; //for now
-    }
+    return finger1;
+}
 
 template<>
 void DominanceTree<BasicBlock>::print(){
